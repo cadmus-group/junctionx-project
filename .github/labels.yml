@@ -1,0 +1,31 @@
+# Repository labels. Apply with a labeler action or `gh label create`.
+- name: frontend
+  color: "1f6feb"
+  description: apps/web and UI packages
+- name: backend
+  color: "0e8a16"
+  description: apps/api and services
+- name: ml
+  color: "8250df"
+  description: apps/ml-lab, features, models
+- name: gis
+  color: "0969da"
+  description: maps, geometry, PostGIS
+- name: data
+  color: "d4c5f9"
+  description: data sources, synthetic data, pipelines
+- name: infra
+  color: "5319e7"
+  description: docker, CI, deployment
+- name: bug
+  color: "d73a4a"
+  description: defects
+- name: feature
+  color: "a2eeef"
+  description: new functionality
+- name: demo-critical
+  color: "b60205"
+  description: required for the demo flow
+- name: documentation
+  color: "0075ca"
+  description: docs and ADRs

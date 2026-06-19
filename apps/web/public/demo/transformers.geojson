@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "id": "tx-001", "geometry": { "type": "Point", "coordinates": [4.8825, 52.3748] }, "properties": { "entity_id": "tx-001", "entity_type": "transformer", "name": "Transformer 001", "external_ref": "NL-TX-0001", "risk_score": 88, "risk_tier": "CRITICAL", "estimated_loss_kwh": 1230 } },
+    { "type": "Feature", "id": "tx-002", "geometry": { "type": "Point", "coordinates": [4.8910, 52.3552] }, "properties": { "entity_id": "tx-002", "entity_type": "transformer", "name": "Transformer 002", "external_ref": "NL-TX-0002", "risk_score": 41, "risk_tier": "WATCH", "estimated_loss_kwh": 360 } },
+    { "type": "Feature", "id": "tx-003", "geometry": { "type": "Point", "coordinates": [4.9300, 52.3608] }, "properties": { "entity_id": "tx-003", "entity_type": "transformer", "name": "Transformer 003", "external_ref": "NL-TX-0003", "risk_score": 57, "risk_tier": "MEDIUM", "estimated_loss_kwh": 520 } },
+    { "type": "Feature", "id": "tx-004", "geometry": { "type": "Point", "coordinates": [4.9208, 52.3910] }, "properties": { "entity_id": "tx-004", "entity_type": "transformer", "name": "Transformer 004", "external_ref": "NL-TX-0004", "risk_score": 23, "risk_tier": "LOW", "estimated_loss_kwh": 180 } },
+    { "type": "Feature", "id": "tx-005", "geometry": { "type": "Point", "coordinates": [4.9614, 52.3153] }, "properties": { "entity_id": "tx-005", "entity_type": "transformer", "name": "Transformer 005", "external_ref": "NL-TX-0005", "risk_score": 64, "risk_tier": "MEDIUM", "estimated_loss_kwh": 610 } },
+    { "type": "Feature", "id": "tx-006", "geometry": { "type": "Point", "coordinates": [4.8838, 52.3735] }, "properties": { "entity_id": "tx-006", "entity_type": "transformer", "name": "Transformer 006", "external_ref": "NL-TX-0006", "risk_score": 35, "risk_tier": "WATCH", "estimated_loss_kwh": 290 } },
+    { "type": "Feature", "id": "tx-007", "geometry": { "type": "Point", "coordinates": [4.8925, 52.3540] }, "properties": { "entity_id": "tx-007", "entity_type": "transformer", "name": "Transformer 007", "external_ref": "NL-TX-0007", "risk_score": 12, "risk_tier": "LOW", "estimated_loss_kwh": 90 } },
+    { "type": "Feature", "id": "tx-008", "geometry": { "type": "Point", "coordinates": [4.9288, 52.3594] }, "properties": { "entity_id": "tx-008", "entity_type": "transformer", "name": "Transformer 008", "external_ref": "NL-TX-0008", "risk_score": 48, "risk_tier": "WATCH", "estimated_loss_kwh": 410 } },
+    { "type": "Feature", "id": "tx-009", "geometry": { "type": "Point", "coordinates": [4.9197, 52.3898] }, "properties": { "entity_id": "tx-009", "entity_type": "transformer", "name": "Transformer 009", "external_ref": "NL-TX-0009", "risk_score": 71, "risk_tier": "HIGH", "estimated_loss_kwh": 720 } },
+    { "type": "Feature", "id": "tx-010", "geometry": { "type": "Point", "coordinates": [4.9620, 52.3142] }, "properties": { "entity_id": "tx-010", "entity_type": "transformer", "name": "Transformer 010", "external_ref": "NL-TX-0010", "risk_score": 29, "risk_tier": "LOW", "estimated_loss_kwh": 210 } }
+  ]
+}

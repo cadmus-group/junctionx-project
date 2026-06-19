@@ -1,0 +1,34 @@
+{
+  "name": "@gridtrace/testing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./browser": "./src/browser.ts",
+    "./server": "./src/server.ts",
+    "./handlers": "./src/handlers.ts",
+    "./data": "./src/data.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@gridtrace/config": "workspace:*",
+    "@gridtrace/contracts": "workspace:*",
+    "@gridtrace/domain": "workspace:*",
+    "msw": "^2.7.0"
+  },
+  "devDependencies": {
+    "@gridtrace/eslint-config": "workspace:*",
+    "@gridtrace/typescript-config": "workspace:*",
+    "eslint": "^9.15.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

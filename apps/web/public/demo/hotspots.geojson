@@ -1,0 +1,10 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "id": "region-jordaan", "geometry": { "type": "Polygon", "coordinates": [[[4.8629, 52.3863], [4.9013, 52.3863], [4.9205, 52.3743], [4.9013, 52.3623], [4.8629, 52.3623], [4.8437, 52.3743], [4.8629, 52.3863]]] }, "properties": { "h3_index": "8a190ffffff", "risk_score": 71.4, "customer_count": 40 } },
+    { "type": "Feature", "id": "region-de-pijp", "geometry": { "type": "Polygon", "coordinates": [[[4.8725, 52.3668], [4.9109, 52.3668], [4.9301, 52.3548], [4.9109, 52.3428], [4.8725, 52.3428], [4.8533, 52.3548], [4.8725, 52.3668]]] }, "properties": { "h3_index": "8a191ffffff", "risk_score": 38.2, "customer_count": 40 } },
+    { "type": "Feature", "id": "region-oost", "geometry": { "type": "Polygon", "coordinates": [[[4.9103, 52.3721], [4.9487, 52.3721], [4.9679, 52.3601], [4.9487, 52.3481], [4.9103, 52.3481], [4.8911, 52.3601], [4.9103, 52.3721]]] }, "properties": { "h3_index": "8a192ffffff", "risk_score": 45.7, "customer_count": 40 } },
+    { "type": "Feature", "id": "region-noord", "geometry": { "type": "Polygon", "coordinates": [[[4.9011, 52.4025], [4.9395, 52.4025], [4.9587, 52.3905], [4.9395, 52.3785], [4.9011, 52.3785], [4.8819, 52.3905], [4.9011, 52.4025]]] }, "properties": { "h3_index": "8a193ffffff", "risk_score": 31.9, "customer_count": 40 } },
+    { "type": "Feature", "id": "region-zuidoost", "geometry": { "type": "Polygon", "coordinates": [[[4.9417, 52.3268], [4.9801, 52.3268], [4.9993, 52.3148], [4.9801, 52.3028], [4.9417, 52.3028], [4.9225, 52.3148], [4.9417, 52.3268]]] }, "properties": { "h3_index": "8a194ffffff", "risk_score": 52.3, "customer_count": 40 } }
+  ]
+}

@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.venv/
+.venv-verify/
+__pycache__/
+*.egg-info/
+.uv/
+
+# Env
+.env
+.env.local
+.env.test
+.env*.local
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+.turbo/
+
+# Generated contracts (regenerated from OpenAPI; keep openapi.json tracked)
+packages/contracts/generated/
+
+# Test / coverage
+coverage/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+playwright-report/
+test-results/
+
+# ML artifacts & data
+apps/ml-lab/artifacts/*
+!apps/ml-lab/artifacts/.gitkeep
+data/raw/*
+data/processed/*
+!data/**/.gitkeep
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json

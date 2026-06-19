@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint TypeScript
+        run: pnpm lint
+      - name: Typecheck TypeScript
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: uv sync --all-packages
+      - name: Lint Python (ruff)
+        run: uv run ruff check .
+      - name: Typecheck Python (mypy)
+        run: uv run mypy packages/domain-py/src apps/api/src
+      - name: Python unit tests
+        run: uv run pytest packages/domain-py apps/api/tests/unit apps/worker/tests apps/ml-lab/tests -q
+
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: pnpm install --frozen-lockfile
+      - run: uv sync --package gridtrace-api
+      - name: Regenerate contracts
+        run: pnpm generate:contracts
+      - name: Fail if contracts are stale
+        run: |
+          if [ -n "$(git status --porcelain packages/contracts/openapi.json packages/contracts/generated)" ]; then
+            echo "::error::Generated contracts are stale. Run 'pnpm generate:contracts' and commit."
+            git --no-pager diff -- packages/contracts/openapi.json
+            exit 1
+          fi
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan for committed secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

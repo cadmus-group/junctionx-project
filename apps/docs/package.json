@@ -1,0 +1,12 @@
+{
+  "name": "@gridtrace/docs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GridTrace documentation. MVP uses Markdown under /docs; this package is a placeholder for a future Next.js docs site.",
+  "scripts": {
+    "dev": "echo \"Docs are Markdown under /docs for the MVP. See docs/README.md\"",
+    "build": "echo \"No docs build for MVP\"",
+    "lint": "echo \"no-op\"",
+    "typecheck": "echo \"no-op\""
+  }
+}

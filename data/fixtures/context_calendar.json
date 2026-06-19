@@ -1,0 +1,5 @@
+[
+  {"type": "holiday", "date": "2026-04-27", "name": "Kingsday", "country_code": "NLD"},
+  {"type": "tariff", "effective_from": "2026-01-01", "energy_price_eur_per_kwh": 0.25, "currency": "EUR"},
+  {"type": "weather_note", "season": "spring", "heating_degree_days_bias": 0.0}
+]

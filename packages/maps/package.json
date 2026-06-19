@@ -1,0 +1,40 @@
+{
+  "name": "@gridtrace/maps",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./layers": "./src/layers/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@deck.gl/core": "^9.0.36",
+    "@deck.gl/layers": "^9.0.36",
+    "@deck.gl/mapbox": "^9.0.36",
+    "@gridtrace/config": "workspace:*",
+    "@gridtrace/contracts": "workspace:*",
+    "@gridtrace/domain": "workspace:*",
+    "maplibre-gl": "^4.7.1"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@gridtrace/eslint-config": "workspace:*",
+    "@gridtrace/typescript-config": "workspace:*",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "eslint": "^9.15.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

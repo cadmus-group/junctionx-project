@@ -1,0 +1,11 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "id": "cust-0001", "geometry": { "type": "Point", "coordinates": [4.8830, 52.3752] }, "properties": { "entity_id": "cust-0001", "entity_type": "customer", "external_ref": "NL-MTR-00001", "risk_score": 87, "risk_tier": "CRITICAL", "estimated_loss_kwh": 3120 } },
+    { "type": "Feature", "id": "cust-0009", "geometry": { "type": "Point", "coordinates": [4.9201, 52.3902] }, "properties": { "entity_id": "cust-0009", "entity_type": "customer", "external_ref": "NL-MTR-00009", "risk_score": 78, "risk_tier": "HIGH", "estimated_loss_kwh": 2410 } },
+    { "type": "Feature", "id": "cust-0014", "geometry": { "type": "Point", "coordinates": [4.9302, 52.3596] }, "properties": { "entity_id": "cust-0014", "entity_type": "customer", "external_ref": "NL-MTR-00014", "risk_score": 73, "risk_tier": "HIGH", "estimated_loss_kwh": 2150 } },
+    { "type": "Feature", "id": "cust-0022", "geometry": { "type": "Point", "coordinates": [4.9612, 52.3151] }, "properties": { "entity_id": "cust-0022", "entity_type": "customer", "external_ref": "NL-MTR-00022", "risk_score": 66, "risk_tier": "MEDIUM", "estimated_loss_kwh": 1880 } },
+    { "type": "Feature", "id": "cust-0031", "geometry": { "type": "Point", "coordinates": [4.8915, 52.3545] }, "properties": { "entity_id": "cust-0031", "entity_type": "customer", "external_ref": "NL-MTR-00031", "risk_score": 58, "risk_tier": "MEDIUM", "estimated_loss_kwh": 1520 } },
+    { "type": "Feature", "id": "cust-0047", "geometry": { "type": "Point", "coordinates": [4.8820, 52.3740] }, "properties": { "entity_id": "cust-0047", "entity_type": "customer", "external_ref": "NL-MTR-00047", "risk_score": 54, "risk_tier": "MEDIUM", "estimated_loss_kwh": 1340 } }
+  ]
+}

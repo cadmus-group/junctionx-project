@@ -1,0 +1,31 @@
+{
+  "name": "gridtrace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GridTrace — Find where energy disappears, explain why, and prioritize what to inspect.",
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "generate:contracts": "bash scripts/generate-contracts.sh",
+    "db:migrate": "bash scripts/db-migrate.sh",
+    "db:seed": "bash scripts/db-seed.sh",
+    "demo:reset": "bash scripts/demo-reset.sh"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "turbo": "^2.3.3",
+    "typescript": "^5.6.3"
+  }
+}

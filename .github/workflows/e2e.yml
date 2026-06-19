@@ -1,0 +1,64 @@
+name: E2E
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env:
+          POSTGRES_USER: gridtrace
+          POSTGRES_PASSWORD: gridtrace
+          POSTGRES_DB: gridtrace
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gridtrace -d gridtrace"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://gridtrace:gridtrace@localhost:5432/gridtrace
+      ASYNC_DATABASE_URL: postgresql+asyncpg://gridtrace:gridtrace@localhost:5432/gridtrace
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+      NEXT_PUBLIC_DEMO_MODE: "false"
+      DEMO_SEED: "42"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: pnpm install --frozen-lockfile
+      - run: uv sync --all-packages
+      - name: Migrate database
+        run: pnpm db:migrate
+      - name: Seed deterministic demo
+        run: pnpm db:seed
+      - name: Start API
+        run: |
+          uv run --package gridtrace-api uvicorn gridtrace_api.main:app --host 0.0.0.0 --port 8000 &
+          npx wait-on http://localhost:8000/api/v1/health
+      - name: Install Playwright browsers
+        run: pnpm --filter @gridtrace/web exec playwright install --with-deps chromium
+      - name: Build and start web
+        run: |
+          pnpm --filter @gridtrace/web build
+          pnpm --filter @gridtrace/web start &
+          npx wait-on http://localhost:3000
+      - name: Run Playwright
+        run: pnpm --filter @gridtrace/web test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report

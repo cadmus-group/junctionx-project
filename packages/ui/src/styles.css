@@ -1,0 +1,3 @@
+/* Shared utility hints for consumers of @gridtrace/ui.
+   Semantic tokens and the Tailwind theme are defined by the consuming app
+   (see apps/web/app/globals.css). This file is intentionally minimal. */

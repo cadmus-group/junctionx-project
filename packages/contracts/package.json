@@ -1,0 +1,24 @@
+{
+  "name": "@gridtrace/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./openapi": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript ./openapi.json -o ./generated/openapi.ts || echo 'openapi.json not present yet; run pnpm generate:contracts'",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@gridtrace/eslint-config": "workspace:*",
+    "@gridtrace/typescript-config": "workspace:*",
+    "eslint": "^9.15.0",
+    "openapi-typescript": "^7.4.4",
+    "typescript": "^5.6.3"
+  }
+}

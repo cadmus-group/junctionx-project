@@ -1,0 +1,82 @@
+services:
+  postgres:
+    image: postgis/postgis:15-3.4
+    container_name: gridtrace-postgres
+    environment:
+      POSTGRES_USER: gridtrace
+      POSTGRES_PASSWORD: gridtrace
+      POSTGRES_DB: gridtrace
+    ports:
+      - "5432:5432"
+    volumes:
+      - gridtrace_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gridtrace -d gridtrace"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Optional: enable with `docker compose --profile redis up -d`
+  redis:
+    image: redis:7-alpine
+    container_name: gridtrace-redis
+    profiles: ["redis"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    container_name: gridtrace-api
+    profiles: ["full"]
+    env_file: .env
+    environment:
+      ASYNC_DATABASE_URL: postgresql+asyncpg://gridtrace:gridtrace@postgres:5432/gridtrace
+      DATABASE_URL: postgresql://gridtrace:gridtrace@postgres:5432/gridtrace
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/v1/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/worker.Dockerfile
+    container_name: gridtrace-worker
+    profiles: ["full"]
+    env_file: .env
+    environment:
+      ASYNC_DATABASE_URL: postgresql+asyncpg://gridtrace:gridtrace@postgres:5432/gridtrace
+      DATABASE_URL: postgresql://gridtrace:gridtrace@postgres:5432/gridtrace
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Optional: build the web app container. Usually run via `pnpm dev` locally.
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+    container_name: gridtrace-web
+    profiles: ["web"]
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  gridtrace_pgdata:

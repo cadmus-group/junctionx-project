@@ -1,0 +1,13 @@
+# Default owners — adjust to your team.
+# Backend owns the authoritative API schemas and the shared domain formulas.
+/apps/api/                  @gridtrace/backend
+/packages/domain-py/        @gridtrace/backend
+/apps/worker/               @gridtrace/data-ml
+/apps/ml-lab/               @gridtrace/data-ml
+/apps/web/                  @gridtrace/frontend
+/packages/ui/               @gridtrace/frontend
+/packages/api-client/       @gridtrace/frontend
+/packages/contracts/        @gridtrace/backend @gridtrace/frontend
+/packages/maps/             @gridtrace/gis
+/infra/                     @gridtrace/infra
+/.github/                   @gridtrace/infra
