@@ -1,10 +1,35 @@
 import { expect, test } from "@playwright/test";
+import {
+  authenticate,
+  resolveShowcase,
+  TOKEN_STORAGE_KEY,
+  type ShowcaseIds,
+} from "./fixtures/showcase";
 
 const MISSION_NAME = "E2E Inspection Mission";
+
+let showcase: ShowcaseIds;
+let accessToken: string;
+
+test.beforeAll(async ({ request }) => {
+  accessToken = await authenticate(request);
+  showcase = await resolveShowcase(request, accessToken);
+});
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(
+    ([key, token]) => {
+      window.localStorage.setItem(key, token);
+    },
+    [TOKEN_STORAGE_KEY, accessToken] as const
+  );
+});
 
 test("primary demo flow: dashboard -> map -> transformer -> customer -> mission -> outcome", async ({
   page,
 }) => {
+  const { transformerId, customerId, externalRef } = showcase;
+
   // 1. Command Center
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Command Center" })).toBeVisible();
@@ -15,19 +40,20 @@ test("primary demo flow: dashboard -> map -> transformer -> customer -> mission 
   await expect(page).toHaveURL(/\/map/);
   await expect(page.getByText("Risk score")).toBeVisible();
 
-  // 3. Select a transformer via the URL-addressable selection, open its twin.
-  await page.goto("/map?selected=tx-001");
+  // 3. Select showcase transformer via URL-addressable selection, open its twin.
+  await page.goto(`/map?selected=${transformerId}&selectedType=transformer`);
   await expect(page.getByText("Transformer digital twin")).toBeVisible();
   await page.getByRole("link", { name: /Open digital twin/i }).click();
 
   // 4. Transformer reconciliation shows the showcase unexplained loss.
-  await expect(page).toHaveURL(/\/assets\/transformers\/tx-001/);
+  await expect(page).toHaveURL(new RegExp(`/assets/transformers/${transformerId}`));
   await expect(page.getByText("Energy reconciliation")).toBeVisible();
   await expect(page.getByText("Unexplained loss")).toBeVisible();
 
   // 5. Open the critical customer investigation.
-  await page.goto("/customers/cust-0001");
+  await page.goto(`/customers/${customerId}`);
   await expect(page.getByText("Why this score")).toBeVisible();
+  await expect(page.getByText(externalRef)).toBeVisible();
   await expect(page.getByText(/human inspection/i)).toBeVisible();
 
   // 6. Add the customer to a new inspection mission.
@@ -40,7 +66,7 @@ test("primary demo flow: dashboard -> map -> transformer -> customer -> mission 
   // 7. Open the mission and submit an outcome for the queued case.
   await page.getByRole("link", { name: "Inspections" }).click();
   await page.getByRole("link", { name: MISSION_NAME }).click();
-  await expect(page.getByText("cust-0001")).toBeVisible();
+  await expect(page.getByText(customerId)).toBeVisible();
 
   await page.getByRole("button", { name: "Outcome" }).first().click();
   await page.getByLabel("Outcome").selectOption("confirmed_meter_fault");
