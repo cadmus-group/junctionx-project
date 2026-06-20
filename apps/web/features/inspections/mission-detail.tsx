@@ -135,7 +135,7 @@ export function MissionDetail({ id }: { id: string }) {
                         description="Add cases from the inspection queue or a customer investigation."
                       />
                     ) : (
-                      <ul className="divide-y divide-border rounded-lg border border-border">
+                      <ul className="divide-y divide-border rounded-sm border border-border">
                         {casesQuery.data.map((c) => (
                           <li key={c.id} className="flex items-center justify-between gap-3 p-3">
                             <div>

@@ -19,13 +19,23 @@ const config: Config = {
     extend: {
       colors: {
         background: token("background"),
-        foreground: token("foreground"),
+        foreground: {
+          DEFAULT: token("foreground"),
+          muted: token("foreground-muted"),
+          subtle: token("foreground-subtle"),
+        },
         surface: {
           DEFAULT: token("surface"),
+          subtle: token("surface-subtle"),
+          strong: token("surface-strong"),
           elevated: token("surface-elevated"),
         },
         "surface-elevated": token("surface-elevated"),
-        border: token("border"),
+        border: {
+          DEFAULT: token("border"),
+          strong: token("border-strong"),
+        },
+        "grid-line": token("grid-line"),
         input: token("border"),
         ring: token("ring"),
         muted: {
@@ -36,10 +46,23 @@ const config: Config = {
           DEFAULT: token("primary"),
           foreground: token("primary-foreground"),
         },
-        info: token("info"),
-        success: token("success"),
+        inverse: {
+          DEFAULT: token("inverse"),
+          foreground: token("inverse-foreground"),
+        },
+        // Semantic data colors — meaning, never decoration.
+        info: token("information"),
+        information: token("information"),
+        success: token("positive"),
+        positive: token("positive"),
         warning: token("warning"),
-        danger: token("danger"),
+        danger: token("negative"),
+        negative: token("negative"),
+        selected: token("selected"),
+        "comparison-series": token("comparison-series"),
+        "forecast-series": token("forecast-series"),
+        "neutral-series-1": token("neutral-series-1"),
+        "neutral-series-2": token("neutral-series-2"),
         "risk-low": token("risk-low"),
         "risk-watch": token("risk-watch"),
         "risk-medium": token("risk-medium"),
@@ -47,9 +70,9 @@ const config: Config = {
         "risk-critical": token("risk-critical"),
       },
       borderRadius: {
-        lg: "0.625rem",
-        md: "0.5rem",
-        sm: "0.375rem",
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 1px)",
+        sm: "2px",
       },
       keyframes: {
         "fade-in-0": { from: { opacity: "0" }, to: { opacity: "1" } },

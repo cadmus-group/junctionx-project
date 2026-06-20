@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export * from "./design-tokens";
+
 /**
  * Shared non-secret configuration: public env schema, risk labels, map defaults,
  * demo flags, supported locales and currencies. No secrets belong here.

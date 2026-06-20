@@ -151,7 +151,7 @@ function MissionGrid({ missions }: { missions: InspectionMission[] }) {
         <Link
           key={m.id}
           href={`/inspections/${m.id}`}
-          className="rounded-lg border border-border bg-surface p-4 transition-colors hover:border-primary/50"
+          className="rounded-[4px] border border-border bg-surface p-4 transition-colors hover:border-border-strong"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium">{m.name}</span>

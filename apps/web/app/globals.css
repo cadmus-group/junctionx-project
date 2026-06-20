@@ -4,27 +4,105 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  GridTrace — sharp monochrome operational interface.
+  Product chrome is black / white / neutral gray. Color is reserved for data
+  meaning: risk states, analytical series, map overlays, status and selection.
+  Light and dark themes are structurally identical.
+
+  Color tokens are stored as space-separated RGB triplets so Tailwind can apply
+  alpha via `rgb(var(--token) / <alpha-value>)`.
+*/
+
 @layer base {
   :root {
-    --background: 13 17 23;
-    --foreground: 230 237 243;
-    --surface: 22 27 34;
-    --surface-elevated: 28 34 43;
-    --border: 42 52 65;
-    --ring: 59 130 246;
-    --muted: 31 39 48;
-    --muted-foreground: 139 152 165;
-    --primary: 59 130 246;
+    /* Light theme — monochrome chrome */
+    --background: 244 244 242;
+    --surface: 255 255 255;
+    --surface-subtle: 236 236 234;
+    --surface-strong: 226 226 222;
+    --surface-elevated: 255 255 255;
+    --foreground: 10 10 10;
+    --foreground-muted: 92 92 88;
+    --foreground-subtle: 133 133 128;
+    --border: 207 207 201;
+    --border-strong: 26 26 26;
+    --inverse: 10 10 10;
+    --inverse-foreground: 255 255 255;
+    --grid-line: 216 216 211;
+    --ring: 10 10 10;
+
+    /* Legacy chrome aliases (mapped onto monochrome scale) */
+    --muted: 236 236 234;
+    --muted-foreground: 92 92 88;
+    --primary: 10 10 10;
     --primary-foreground: 255 255 255;
-    --info: 56 189 248;
-    --success: 34 197 94;
-    --warning: 245 158 11;
-    --danger: 239 68 68;
-    --risk-low: 34 197 94;
-    --risk-watch: 132 204 22;
-    --risk-medium: 245 158 11;
-    --risk-high: 249 115 22;
-    --risk-critical: 239 68 68;
+
+    /* Semantic data colors — identical across themes for stable meaning */
+    --risk-low: 75 139 103;
+    --risk-watch: 176 141 51;
+    --risk-medium: 216 117 43;
+    --risk-high: 209 63 50;
+    --risk-critical: 165 21 21;
+    --information: 46 103 199;
+    --positive: 60 141 99;
+    --negative: 199 58 53;
+    --warning: 184 137 35;
+    --neutral-series-1: 111 111 106;
+    --neutral-series-2: 167 167 159;
+    --comparison-series: 75 111 158;
+    --forecast-series: 124 90 166;
+    --selected: 46 103 199;
+
+    /* Semantic status aliases used by existing components */
+    --info: 46 103 199;
+    --success: 60 141 99;
+    --danger: 209 63 50;
+
+    --radius: 0.25rem;
+  }
+
+  .dark {
+    /* Dark theme — monochrome chrome */
+    --background: 8 8 8;
+    --surface: 17 17 17;
+    --surface-subtle: 24 24 24;
+    --surface-strong: 34 34 34;
+    --surface-elevated: 34 34 34;
+    --foreground: 245 245 242;
+    --foreground-muted: 165 165 160;
+    --foreground-subtle: 119 119 114;
+    --border: 45 45 42;
+    --border-strong: 245 245 242;
+    --inverse: 245 245 242;
+    --inverse-foreground: 8 8 8;
+    --grid-line: 38 38 36;
+    --ring: 245 245 242;
+
+    --muted: 24 24 24;
+    --muted-foreground: 165 165 160;
+    --primary: 245 245 242;
+    --primary-foreground: 8 8 8;
+
+    /* Semantic data colors stay constant for shared meaning */
+    --risk-low: 75 139 103;
+    --risk-watch: 176 141 51;
+    --risk-medium: 216 117 43;
+    --risk-high: 209 63 50;
+    --risk-critical: 165 21 21;
+    --information: 46 103 199;
+    --positive: 60 141 99;
+    --negative: 199 58 53;
+    --warning: 184 137 35;
+    --neutral-series-1: 111 111 106;
+    --neutral-series-2: 167 167 159;
+    --comparison-series: 75 111 158;
+    --forecast-series: 124 90 166;
+    --selected: 46 103 199;
+
+    --info: 46 103 199;
+    --success: 60 141 99;
+    --danger: 209 63 50;
   }
 
   * {
@@ -44,11 +122,22 @@
   }
 }
 
-/* Keep MapLibre controls aligned with the dark theme. */
+/* Square, monochrome MapLibre controls that match the operational chrome. */
 .maplibregl-ctrl-group {
-  background: rgb(var(--surface-elevated));
+  background: rgb(var(--surface));
   border: 1px solid rgb(var(--border));
+  border-radius: 2px;
+  box-shadow: none;
+}
+.maplibregl-ctrl-group button {
+  background: rgb(var(--surface));
 }
 .maplibregl-ctrl-group button + button {
   border-top: 1px solid rgb(var(--border));
+}
+.maplibregl-ctrl-group button:hover {
+  background: rgb(var(--surface-subtle));
+}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: none;
 }

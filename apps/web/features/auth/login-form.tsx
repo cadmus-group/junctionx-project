@@ -57,7 +57,7 @@ export function LoginForm() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
-          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-sm bg-primary text-primary-foreground">
             <Zap className="h-5 w-5" />
           </div>
           <CardTitle>Sign in to GridTrace</CardTitle>

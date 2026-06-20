@@ -40,7 +40,7 @@ export function buildLossTrendOption(
 ): EChartsOption {
   const x = trend.points.map((p) => shortTime(p.timestamp));
   return {
-    color: [palette.primary, palette.info, palette.warning, palette.danger],
+    color: [palette.foreground, palette.neutral1, palette.warning, palette.danger],
     grid: baseGrid(),
     tooltip: { trigger: "axis" },
     legend: { textStyle: { color: palette.muted }, top: 0 },
@@ -96,6 +96,7 @@ export interface TimeSeriesSeries {
   data: number[];
   color?: string;
   area?: boolean;
+  dashed?: boolean;
 }
 
 export function buildTimeSeriesOption(
@@ -105,8 +106,8 @@ export function buildTimeSeriesOption(
 ): EChartsOption {
   return {
     color: series.map((s, i) => {
-      const fallback = [palette.primary, palette.info, palette.warning];
-      return s.color ?? fallback[i % fallback.length] ?? palette.primary;
+      const fallback = [palette.foreground, palette.comparison, palette.warning];
+      return s.color ?? fallback[i % fallback.length] ?? palette.foreground;
     }),
     grid: baseGrid(),
     tooltip: { trigger: "axis" },
@@ -129,6 +130,7 @@ export function buildTimeSeriesOption(
       type: "line",
       smooth: true,
       showSymbol: false,
+      lineStyle: s.dashed ? { type: "dashed", width: 1.5 } : { width: 2 },
       areaStyle: s.area ? { opacity: 0.12 } : undefined,
       data: s.data,
     })),
@@ -142,11 +144,12 @@ export function buildActualVsExpectedOption(
   return buildTimeSeriesOption(
     points.map((p) => shortTime(p.timestamp)),
     [
-      { name: "Actual", data: points.map((p) => p.customer_kwh), color: palette.primary },
+      { name: "Actual", data: points.map((p) => p.customer_kwh), color: palette.foreground },
       {
         name: "Expected",
         data: points.map((p) => p.expected_kwh),
-        color: palette.muted,
+        color: palette.comparison,
+        dashed: true,
         area: true,
       },
     ],
@@ -161,11 +164,12 @@ export function buildPeerComparisonOption(
   return buildTimeSeriesOption(
     points.map((p) => shortTime(p.timestamp)),
     [
-      { name: "This customer", data: points.map((p) => p.customer_kwh), color: palette.primary },
+      { name: "This customer", data: points.map((p) => p.customer_kwh), color: palette.foreground },
       {
         name: "Peer median",
         data: points.map((p) => p.peer_median_kwh),
-        color: palette.info,
+        color: palette.neutral2,
+        dashed: true,
       },
     ],
     { palette }
@@ -195,7 +199,7 @@ export function buildEnergyWaterfallOption(
   }
 
   const colorFor = (kind: string): string =>
-    kind === "input" ? palette.primary : kind === "residual" ? palette.danger : palette.warning;
+    kind === "input" ? palette.foreground : kind === "residual" ? palette.danger : palette.neutral1;
 
   return {
     grid: baseGrid(),
@@ -308,8 +312,9 @@ export function buildPrecisionRecallOption(
         type: "line",
         smooth: true,
         showSymbol: false,
-        color: palette.primary,
-        areaStyle: { opacity: 0.12 },
+        color: palette.info,
+        lineStyle: { width: 2 },
+        areaStyle: { opacity: 0.1 },
         data: points.map((p) => [p.recall, p.precision]),
       },
     ],
@@ -362,7 +367,7 @@ export function buildCalibrationOption(
         name: "Model",
         type: "line",
         smooth: true,
-        color: palette.primary,
+        color: palette.info,
         data: points.map((p) => [p.predicted, p.observed]),
       },
     ],
