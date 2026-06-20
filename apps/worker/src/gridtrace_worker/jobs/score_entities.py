@@ -33,6 +33,7 @@ from gridtrace_worker.log import get_logger, log_event
 from gridtrace_worker.scoring import (
     build_explanations,
     customer_components,
+    replace_anomaly_component,
     transformer_components,
 )
 
@@ -40,6 +41,28 @@ logger = get_logger("score_entities")
 
 EXPECTED_INSPECTION_COST_EUR = 75.0
 PRECISION_AT_K = 20
+MOMENT_ALGORITHM = "moment-reconstruction-hybrid+domain-composite"
+HEURISTIC_ALGORITHM = "deterministic-logistic-heuristic+zscore-anomaly"
+
+
+def _load_moment_results(cfg) -> tuple[dict, str | None]:
+    """Run MOMENT inference when enabled; return empty dict on failure."""
+    if not cfg.moment_active:
+        return {}, None
+    try:
+        from gridtrace_worker.ml.moment_pipeline import MOMENTInferencePipeline
+
+        results = MOMENTInferencePipeline(cfg).infer(cfg.database_url)
+        log_event(
+            logger,
+            "moment_scoring_applied",
+            customers=len(results),
+            model=cfg.moment_model_name,
+        )
+        return results, MOMENT_ALGORITHM
+    except Exception as exc:  # noqa: BLE001 — fallback preserves demo reliability
+        log_event(logger, "moment_scoring_failed", error=str(exc))
+        return {}, None
 
 
 def _average_precision(labels: np.ndarray, scores: np.ndarray) -> float:
@@ -72,6 +95,8 @@ def run(session: Session, seed: int | None = None) -> dict:
     cfg = get_worker_config()
     price = cfg.energy_price_eur_per_kwh
     now = datetime.now(UTC)
+    moment_results, algorithm_override = _load_moment_results(cfg)
+    algorithm = algorithm_override or HEURISTIC_ALGORITHM
 
     snapshots = session.execute(
         select(FeatureSnapshot).where(FeatureSnapshot.feature_version == FEATURE_VERSION)
@@ -100,11 +125,21 @@ def run(session: Session, seed: int | None = None) -> dict:
     rows: list[dict] = []
     eval_labels: list[int] = []
     eval_scores: list[float] = []
+    moment_applied = 0
+    moment_peak_fn = None
+    if moment_results:
+        from gridtrace_worker.ml.moment_pipeline import moment_peak_explanations
+
+        moment_peak_fn = moment_peak_explanations
 
     for s in customer_snaps:
         entity_id = s.entity_id
         feats = cust_features[entity_id]
         scored = cust_scored[entity_id]
+        moment = moment_results.get(entity_id)
+        if moment:
+            scored = replace_anomaly_component(scored, moment.anomaly_score)
+            moment_applied += 1
         tx_id = feats.get("parent_transformer_entity_id", "")
         member_ids = by_tx_refs.get(tx_id, [entity_id])
         weights = [cust_scored[m].suspicion_weight for m in member_ids]
@@ -124,6 +159,8 @@ def run(session: Session, seed: int | None = None) -> dict:
             optional_factor=1.0,
         )
         explanations = build_explanations(scored, feats, share)
+        if moment and moment_peak_fn:
+            explanations.extend(moment_peak_fn(moment))
 
         rows.append(
             _risk_row(
@@ -183,6 +220,7 @@ def run(session: Session, seed: int | None = None) -> dict:
         "precision_at_k": round(_precision_at_k(labels, scores, PRECISION_AT_K), 4),
         "positives": int(labels.sum()),
         "scored_customers": int(labels.size),
+        "moment_customers": moment_applied,
         "risk_weights_version": RISK_WEIGHTS_VERSION,
     }
     session.execute(delete(ModelRegistry).where(ModelRegistry.model_version == MODEL_VERSION))
@@ -192,12 +230,15 @@ def run(session: Session, seed: int | None = None) -> dict:
             id=str(uuid.uuid4()),
             model_version=MODEL_VERSION,
             feature_version=FEATURE_VERSION,
-            algorithm="deterministic-logistic-heuristic+zscore-anomaly",
+            algorithm=algorithm,
             trained_at=now,
             metrics_json=metrics,
             is_active=True,
             k=PRECISION_AT_K,
-            notes="Worker default scorer; heavier models live in apps/ml-lab.",
+            notes=(
+                "MOMENT-1-large hybrid scorer when MOMENT_ENABLED=true; "
+                "otherwise heuristic anomaly component."
+            ),
         )
     )
 
@@ -208,8 +249,15 @@ def run(session: Session, seed: int | None = None) -> dict:
         feature_version=FEATURE_VERSION,
         rows=len(rows),
         metrics=metrics,
+        moment_enabled=cfg.moment_active,
+        moment_applied=moment_applied,
     )
-    return {"rows": len(rows), "metrics": metrics, "model_version": MODEL_VERSION}
+    return {
+        "rows": len(rows),
+        "metrics": metrics,
+        "model_version": MODEL_VERSION,
+        "moment_applied": moment_applied,
+    }
 
 
 def _risk_row(

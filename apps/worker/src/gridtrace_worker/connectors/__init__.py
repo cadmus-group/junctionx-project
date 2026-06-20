@@ -10,11 +10,15 @@ from gridtrace_worker.connectors.base import (
     OfflineConnector,
     SourceFreshness,
 )
+from gridtrace_worker.connectors.amsterdam_context import AmsterdamContextConnector
 from gridtrace_worker.connectors.filesystem import FilesystemConnector
+from gridtrace_worker.connectors.ned import NEDConnector
 
 __all__ = [
+    "AmsterdamContextConnector",
     "ConnectorResult",
     "FilesystemConnector",
+    "NEDConnector",
     "OfflineConnector",
     "SourceFreshness",
 ]

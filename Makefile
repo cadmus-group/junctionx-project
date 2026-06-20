@@ -6,9 +6,9 @@ SHELL := /bin/bash
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-install: ## Install JS (pnpm) and Python (uv) dependencies
+install: ## Install JS (pnpm) and Python (pip + .venv)
 	pnpm install
-	uv sync --all-packages
+	./scripts/pip-install.sh
 
 dev: ## Run web + api in dev mode
 	pnpm dev

@@ -14,7 +14,7 @@ from gridtrace_worker.jobs.generate_synthetic import (
     SHOWCASE_TRANSFORMER_INDEX,
     build_demo_dataset,
 )
-from gridtrace_worker.scoring import customer_components, transformer_components
+from gridtrace_worker.scoring import customer_components, replace_anomaly_component, transformer_components
 
 
 def _features_for_transformer(ds, tx_index):
@@ -77,6 +77,20 @@ def test_meter_fault_low_supervised_high_anomaly():
     assert scored.components.supervised_probability < 0.4
 
 
+def test_replace_anomaly_component_recomputes_score():
+    feats = {
+        "drop_ratio": 0.3,
+        "peer_deviation": 0.8,
+        "flatline": 0.0,
+        "grid_unexplained_ratio": 0.1,
+        "spatial_neighborhood_risk": 0.4,
+    }
+    base = customer_components(feats)
+    updated = replace_anomaly_component(base, 0.95)
+    assert updated.components.anomaly_score == 0.95
+    assert updated.score >= base.score
+
+
 def test_transformer_score_in_range_and_showcase_high():
     ds = build_demo_dataset(42)
     members, feats = _features_for_transformer(ds, SHOWCASE_TRANSFORMER_INDEX)
@@ -91,6 +105,22 @@ def test_transformer_score_in_range_and_showcase_high():
     scored = transformer_components(tx_feats)
     assert 0.0 <= scored.score <= 100.0
     assert scored.tier in ("HIGH", "CRITICAL")
+
+
+def test_solar_flag_dampens_daylight_drop_alarm():
+    base_feats = {
+        "drop_ratio": 0.35,
+        "peer_deviation": 0.75,
+        "flatline": 0.0,
+        "anomaly_z": 2.5,
+        "grid_unexplained_ratio": 0.1,
+        "spatial_neighborhood_risk": 0.4,
+        "daylight_drop_index": 0.6,
+    }
+    without_solar = customer_components(base_feats)
+    with_solar = customer_components({**base_feats, "solar_potential_flag": True})
+    assert with_solar.components.supervised_probability < without_solar.components.supervised_probability
+    assert with_solar.components.anomaly_score < without_solar.components.anomaly_score
 
 
 def test_no_customer_overlap_between_transformers():

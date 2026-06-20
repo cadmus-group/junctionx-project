@@ -3,11 +3,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+ROOT="$(pwd)"
+PY="$("$ROOT/scripts/py.sh")"
+
 echo "==> Exporting OpenAPI schema from FastAPI"
-if command -v uv >/dev/null 2>&1; then
-  uv run --package gridtrace-api python scripts/export-openapi.py
+if [ "$PY" = "python3" ] && [ ! -x "$ROOT/.venv/bin/python" ]; then
+  PYTHONPATH="apps/api/src:packages/domain-py/src" "$PY" scripts/export-openapi.py
 else
-  PYTHONPATH="apps/api/src:packages/domain-py/src" python3 scripts/export-openapi.py
+  "$PY" scripts/export-openapi.py
 fi
 
 echo "==> Generating TypeScript types from OpenAPI"

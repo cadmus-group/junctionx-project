@@ -1,0 +1,8 @@
+[
+  {"timestamp": "2026-06-18T00:00:00+00:00", "national_load_mw": 9200.0, "production_mix_solar": 0.0, "production_mix_wind": 0.62, "grid_status_flag": "normal"},
+  {"timestamp": "2026-06-18T01:00:00+00:00", "national_load_mw": 8800.0, "production_mix_solar": 0.0, "production_mix_wind": 0.65, "grid_status_flag": "normal"},
+  {"timestamp": "2026-06-18T06:00:00+00:00", "national_load_mw": 9100.0, "production_mix_solar": 0.08, "production_mix_wind": 0.55, "grid_status_flag": "normal"},
+  {"timestamp": "2026-06-18T12:00:00+00:00", "national_load_mw": 10200.0, "production_mix_solar": 0.42, "production_mix_wind": 0.28, "grid_status_flag": "normal"},
+  {"timestamp": "2026-06-18T18:00:00+00:00", "national_load_mw": 10800.0, "production_mix_solar": 0.12, "production_mix_wind": 0.38, "grid_status_flag": "normal"},
+  {"timestamp": "2026-06-19T12:00:00+00:00", "national_load_mw": 10150.0, "production_mix_solar": 0.45, "production_mix_wind": 0.25, "grid_status_flag": "normal"}
+]

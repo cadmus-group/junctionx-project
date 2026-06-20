@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from geoalchemy2 import Geometry
-from sqlalchemy import DateTime, Float, ForeignKey, Index, String
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -56,6 +56,8 @@ class Customer(Base):
     customer_type: Mapped[str] = mapped_column(String, nullable=False)
     tariff_type: Mapped[str | None] = mapped_column(String, nullable=True)
     building_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    woningwaarde_category: Mapped[str | None] = mapped_column(String, nullable=True)
+    solar_potential_flag: Mapped[bool] = mapped_column(Boolean, default=False)
     geometry: Mapped[Any | None] = mapped_column(
         Geometry(geometry_type="POINT", srid=4326, spatial_index=False), nullable=True
     )

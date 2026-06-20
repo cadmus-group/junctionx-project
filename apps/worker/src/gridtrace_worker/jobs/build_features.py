@@ -30,9 +30,34 @@ from gridtrace_worker.features import (
     customer_feature_vector,
     transformer_feature_vector,
 )
+from gridtrace_worker.config import get_worker_config
 from gridtrace_worker.log import get_logger, log_event
+from gridtrace_worker.olap.duckdb_pipeline import parquet_paths
 
 logger = get_logger("build_features")
+
+
+def _load_olap_feature_map() -> dict[str, dict]:
+    cfg = get_worker_config()
+    path = parquet_paths(cfg.data_processed_path).get("customer_features")
+    if path is None or not path.is_file():
+        return {}
+    try:
+        import polars as pl
+
+        frame = pl.read_parquet(path)
+        out: dict[str, dict] = {}
+        for row in frame.iter_rows(named=True):
+            out[str(row["meter_id"])] = {
+                "rolling_14d_avg_kwh": float(row.get("rolling_14d_avg_kwh") or 0.0),
+                "peer_group_median_kwh": float(row.get("peer_group_median_kwh") or 0.0),
+                "daylight_drop_index": float(row.get("daylight_drop_index") or 0.0),
+                "woningwaarde_category": row.get("woningwaarde_category"),
+                "solar_potential_flag": bool(row.get("solar_potential_flag")),
+            }
+        return out
+    except Exception:
+        return {}
 
 
 def _timestamp_index(session: Session) -> list[datetime]:
@@ -89,6 +114,7 @@ def run(session: Session, seed: int | None = None) -> dict:
     hours = np.array([ts.hour for ts in ts_list])
 
     customers = session.execute(select(Customer)).scalars().all()
+    olap_features = _load_olap_feature_map()
     series = _load_customer_series(session, ts_index, n)
     tx_totals = _transformer_totals(session)
 
@@ -134,6 +160,11 @@ def run(session: Session, seed: int | None = None) -> dict:
             feats["parent_transformer_entity_id"] = tx_id
             feats["incident"] = (c.metadata_json or {}).get("incident")
             feats["is_ntl"] = bool((c.metadata_json or {}).get("is_ntl", False))
+            feats["woningwaarde_category"] = c.woningwaarde_category
+            feats["solar_potential_flag"] = bool(c.solar_potential_flag)
+            olap = olap_features.get(c.id)
+            if olap:
+                feats.update(olap)
             snapshot_rows.append(
                 {
                     "id": str(uuid.uuid4()),
