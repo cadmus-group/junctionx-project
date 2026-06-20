@@ -4,6 +4,7 @@ from gridtrace_api.main import create_app
 
 REQUIRED_PATHS = {
     "/api/v1/auth/login",
+    "/api/v1/auth/me",
     "/api/v1/dashboard/summary",
     "/api/v1/dashboard/loss-trend",
     "/api/v1/gis/anomalies/geojson",

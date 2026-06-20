@@ -23,6 +23,7 @@ from gridtrace_api.shared.errors import register_exception_handlers
 def create_app() -> FastAPI:
     configure_logging()
     settings = get_settings()
+    settings.ensure_safe_for_deploy()
 
     app = FastAPI(
         title="GridTrace API",

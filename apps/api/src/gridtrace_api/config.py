@@ -32,13 +32,16 @@ class Settings(BaseSettings):
     jwt_secret: str = Field(default="dev-only-insecure-change-me", alias="JWT_SECRET")
     jwt_algorithm: str = "HS256"
     jwt_expire_seconds: int = 60 * 60 * 8
+    environment: str = Field(default="development", alias="ENVIRONMENT")
+
+    _INSECURE_JWT_SECRETS = frozenset({"dev-only-insecure-change-me", "change-me", "secret"})
 
     # Server
     api_host: str = Field(default="0.0.0.0", alias="API_HOST")
     api_port: int = Field(default=8000, alias="API_PORT")
 
     # Demo / artifacts
-    demo_mode: bool = Field(default=True, alias="NEXT_PUBLIC_DEMO_MODE")
+    demo_mode: bool = Field(default=False, alias="NEXT_PUBLIC_DEMO_MODE")
     demo_seed: int = Field(default=42, alias="DEMO_SEED")
     model_artifact_path: str = Field(
         default="./apps/ml-lab/artifacts", alias="MODEL_ARTIFACT_PATH"
@@ -76,6 +79,15 @@ class Settings(BaseSettings):
     @property
     def is_sqlite(self) -> bool:
         return self.async_database_url.startswith("sqlite")
+
+    def ensure_safe_for_deploy(self) -> None:
+        """Refuse to start in production-like environments with default secrets."""
+        if self.environment.lower() in {"production", "staging", "prod"}:
+            if self.jwt_secret in self._INSECURE_JWT_SECRETS:
+                raise RuntimeError(
+                    "JWT_SECRET must be set to a strong value when ENVIRONMENT is "
+                    f"{self.environment!r}"
+                )
 
 
 @lru_cache
