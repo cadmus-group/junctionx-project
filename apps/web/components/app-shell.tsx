@@ -27,7 +27,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
-import { ROLE_LABELS, type Role } from "@/lib/roles";
+import { ROLE_DESCRIPTIONS, ROLE_LABELS, type Role } from "@/lib/roles";
 
 interface NavItem {
   href: string;
@@ -41,17 +41,19 @@ interface NavItem {
   hidden?: boolean;
 }
 
-const ALL: Role[] = ["admin", "analyst", "inspector"];
+const ALL: Role[] = ["operator", "analyst", "inspector"];
 
+// Per-persona navigation. Operator = oversight; Analyst = triage/model;
+// Inspector = field work. Pages stay reachable by URL; the sidebar is the view.
 const NAV: NavItem[] = [
-  { href: "/", label: "Command Center", icon: LayoutDashboard, roles: ALL },
+  { href: "/", label: "Command Center", icon: LayoutDashboard, roles: ["operator", "analyst"] },
   { href: "/map", label: "Risk Map", icon: MapIcon, roles: ALL },
-  { href: "/assets", label: "Assets", icon: Boxes, roles: ["admin", "analyst"] },
-  { href: "/customers", label: "Customers", icon: Users, roles: ALL },
-  { href: "/inspections", label: "Inspections", icon: ClipboardList, roles: ["admin", "inspector"] },
-  { href: "/analytics", label: "Model Analytics", icon: Activity, roles: ["admin", "analyst"] },
-  { href: "/data-quality", label: "Data Quality", icon: Database, roles: ["admin", "analyst"] },
-  { href: "/settings", label: "Settings", icon: Settings, roles: ALL, hidden: true },
+  { href: "/assets", label: "Assets", icon: Boxes, roles: ["analyst"] },
+  { href: "/customers", label: "Customers", icon: Users, roles: ["analyst"] },
+  { href: "/inspections", label: "Inspections", icon: ClipboardList, roles: ALL },
+  { href: "/analytics", label: "Model Analytics", icon: Activity, roles: ["analyst"] },
+  { href: "/data-quality", label: "Data Quality", icon: Database, roles: ["analyst"] },
+  { href: "/settings", label: "Settings", icon: Settings, roles: ["operator"], hidden: true },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -138,14 +140,19 @@ function ProfileMenu() {
         <DropdownMenuLabel className="flex flex-col gap-0.5">
           <span className="text-sm font-medium text-foreground">{user.name}</span>
           <span className="text-xs font-normal text-muted-foreground">{ROLE_LABELS[user.role]}</span>
+          <span className="text-[11px] font-normal text-muted-foreground/70">
+            {ROLE_DESCRIPTIONS[user.role]}
+          </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/settings">
-            <Settings className="h-4 w-4" />
-            Settings
-          </Link>
-        </DropdownMenuItem>
+        {user.role === "operator" ? (
+          <DropdownMenuItem asChild>
+            <Link href="/settings">
+              <Settings className="h-4 w-4" />
+              Settings
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem onSelect={() => logout()}>
           <LogOut className="h-4 w-4" />
           Sign out

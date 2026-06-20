@@ -18,7 +18,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/client";
-import { resolveRole } from "@/lib/roles";
+import { ROLE_HOME, resolveRole } from "@/lib/roles";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -33,9 +33,9 @@ export function LoginForm() {
   const { login, user, ready } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
-  // Already signed in? Skip the login screen.
+  // Already signed in? Skip the login screen, landing on the role's home.
   useEffect(() => {
-    if (ready && user) router.replace("/");
+    if (ready && user) router.replace(ROLE_HOME[user.role]);
   }, [ready, user, router]);
 
   const {
@@ -54,16 +54,17 @@ export function LoginForm() {
         method: "POST",
         body: { username: values.username, password: values.password },
       });
+      const role = resolveRole(res.user.role);
       login(
         {
           id: res.user.id,
           name: res.user.name,
           email: res.user.email,
-          role: resolveRole(res.user.role),
+          role,
         },
         res.access_token
       );
-      router.replace("/");
+      router.replace(ROLE_HOME[role]);
     } catch {
       setError("Sign-in failed. Check your credentials and try again.");
     }

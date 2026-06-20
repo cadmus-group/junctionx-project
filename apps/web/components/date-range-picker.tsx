@@ -3,51 +3,18 @@
 import { cn, Label } from "@gridtrace/ui";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-
-const MS_DAY = 86_400_000;
-const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
-// Everything is handled at UTC midnight so the displayed day never drifts with
-// the viewer's timezone (filters are stored as ISO strings).
-function utcDay(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-}
-function parseIso(iso?: string): Date | undefined {
-  if (!iso) return undefined;
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? undefined : utcDay(d);
-}
-function todayUtc(): Date {
-  const n = new Date();
-  return new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()));
-}
-function addDays(d: Date, n: number): Date {
-  return new Date(d.getTime() + n * MS_DAY);
-}
-function startOfMonth(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
-}
-function addMonths(d: Date, n: number): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, 1));
-}
-function sameDay(a?: Date, b?: Date): boolean {
-  return !!a && !!b && a.getTime() === b.getTime();
-}
-function fmtShort(d: Date): string {
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]!.slice(0, 3)}`;
-}
-
-/** 6 weeks of days (Monday-first) covering the given month view. */
-function buildGrid(view: Date): Date[] {
-  const first = startOfMonth(view);
-  const offset = (first.getUTCDay() + 6) % 7; // 0 = Monday
-  const start = addDays(first, -offset);
-  return Array.from({ length: 42 }, (_, i) => addDays(start, i));
-}
+import {
+  addDays,
+  addMonths,
+  buildGrid,
+  fmtShort,
+  MONTHS,
+  parseIso,
+  sameDay,
+  startOfMonth,
+  todayUtc,
+  WEEKDAYS,
+} from "./calendar-utils";
 
 export interface DateRangePickerProps {
   from?: string;

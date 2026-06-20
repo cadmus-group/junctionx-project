@@ -53,16 +53,17 @@ export const handlers = [
       username?: string;
       email?: string;
     };
-    // Demo mode: any password works; the username selects the role.
+    // Demo mode: any password works; the username selects the persona/role.
     const identifier = (body.username ?? body.email ?? "analyst").toLowerCase();
-    const role: "admin" | "analyst" | "inspector" = identifier.includes("admin")
-      ? "admin"
-      : identifier.includes("inspector") || identifier.includes("field")
-        ? "inspector"
-        : "analyst";
-    const nameByRole: Record<"admin" | "analyst" | "inspector", string> = {
-      admin: "Admin User",
-      analyst: "Data Analyst",
+    const role: "operator" | "analyst" | "inspector" =
+      identifier.includes("operator") || identifier.includes("admin")
+        ? "operator"
+        : identifier.includes("inspector") || identifier.includes("field")
+          ? "inspector"
+          : "analyst";
+    const nameByRole: Record<"operator" | "analyst" | "inspector", string> = {
+      operator: "Grid Operations Lead",
+      analyst: "Risk Analyst",
       inspector: "Field Inspector",
     };
     const response: AuthLoginResponse = {
