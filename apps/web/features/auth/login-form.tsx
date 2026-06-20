@@ -1,25 +1,27 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { AuthLoginResponse } from "@gridtrace/contracts";
 import {
   Button,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   Input,
   Label,
 } from "@gridtrace/ui";
+import { Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Zap } from "lucide-react";
-import { setToken, useApi } from "@/lib/client";
+import { useAuth } from "@/lib/auth";
+import { useApi } from "@/lib/client";
+import { resolveRole } from "@/lib/roles";
 
 const loginSchema = z.object({
-  email: z.string().email("Enter a valid email"),
+  username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -28,7 +30,13 @@ type LoginValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const router = useRouter();
   const { client } = useApi();
+  const { login, user, ready } = useAuth();
   const [error, setError] = useState<string | null>(null);
+
+  // Already signed in? Skip the login screen.
+  useEffect(() => {
+    if (ready && user) router.replace("/");
+  }, [ready, user, router]);
 
   const {
     register,
@@ -36,18 +44,26 @@ export function LoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "operator@gridtrace.demo", password: "demo" },
+    defaultValues: { username: "analyst", password: "demo" },
   });
 
   const onSubmit = handleSubmit(async (values) => {
     setError(null);
     try {
-      const res = await client.request<{ access_token: string }>("api/v1/auth/login", {
+      const res = await client.request<AuthLoginResponse>("api/v1/auth/login", {
         method: "POST",
-        body: values,
+        body: { username: values.username, password: values.password },
       });
-      setToken(res.access_token);
-      router.push("/");
+      login(
+        {
+          id: res.user.id,
+          name: res.user.name,
+          email: res.user.email,
+          role: resolveRole(res.user.role),
+        },
+        res.access_token
+      );
+      router.replace("/");
     } catch {
       setError("Sign-in failed. Check your credentials and try again.");
     }
@@ -60,18 +76,15 @@ export function LoginForm() {
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-sm bg-primary text-primary-foreground">
             <Zap className="h-5 w-5" />
           </div>
-          <CardTitle>Sign in to GridTrace</CardTitle>
-          <CardDescription>
-            Find where energy disappears, explain why, and prioritize what to inspect.
-          </CardDescription>
+          <CardTitle>GridTrace</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="username" {...register("email")} />
-              {errors.email ? (
-                <p className="text-xs text-danger">{errors.email.message}</p>
+              <Label htmlFor="username">Username</Label>
+              <Input id="username" autoComplete="username" {...register("username")} />
+              {errors.username ? (
+                <p className="text-xs text-danger">{errors.username.message}</p>
               ) : null}
             </div>
             <div className="space-y-1.5">
@@ -90,9 +103,6 @@ export function LoginForm() {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? "Signing in…" : "Sign in"}
             </Button>
-            <p className="text-center text-xs text-muted-foreground">
-              Demo mode accepts any credentials.
-            </p>
           </form>
         </CardContent>
       </Card>

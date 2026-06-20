@@ -49,16 +49,31 @@ let outcomeSeq = 100;
 
 export const handlers = [
   http.post(`${V1}/auth/login`, async ({ request }) => {
-    const body = (await request.json().catch(() => ({}))) as { email?: string };
+    const body = (await request.json().catch(() => ({}))) as {
+      username?: string;
+      email?: string;
+    };
+    // Demo mode: any password works; the username selects the role.
+    const identifier = (body.username ?? body.email ?? "analyst").toLowerCase();
+    const role: "admin" | "analyst" | "inspector" = identifier.includes("admin")
+      ? "admin"
+      : identifier.includes("inspector") || identifier.includes("field")
+        ? "inspector"
+        : "analyst";
+    const nameByRole: Record<"admin" | "analyst" | "inspector", string> = {
+      admin: "Admin User",
+      analyst: "Data Analyst",
+      inspector: "Field Inspector",
+    };
     const response: AuthLoginResponse = {
       access_token: "demo-token",
       token_type: "bearer",
       expires_in: 3600,
       user: {
-        id: "demo-operator",
-        email: body.email ?? "operator@gridtrace.demo",
-        name: "Demo Operator",
-        role: "analyst",
+        id: `demo-${role}`,
+        email: body.email ?? `${identifier}@gridtrace.demo`,
+        name: nameByRole[role],
+        role,
       },
     };
     return HttpResponse.json(response);

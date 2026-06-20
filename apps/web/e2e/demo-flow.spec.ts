@@ -5,8 +5,13 @@ const MISSION_NAME = "E2E Inspection Mission";
 test("primary demo flow: dashboard -> map -> transformer -> customer -> mission -> outcome", async ({
   page,
 }) => {
+  // 0. Sign in as admin (full navigation access) — the app gates on auth.
+  await page.goto("/login");
+  await page.getByLabel("Username").fill("admin");
+  await page.getByLabel("Password").fill("demo");
+  await page.getByRole("button", { name: "Sign in" }).click();
+
   // 1. Command Center
-  await page.goto("/");
   await expect(page.getByRole("heading", { name: "Command Center" })).toBeVisible();
   await expect(page.getByText("Unexplained loss")).toBeVisible();
 

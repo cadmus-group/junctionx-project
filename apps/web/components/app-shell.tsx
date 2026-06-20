@@ -1,13 +1,23 @@
 "use client";
 
-import { cn } from "@gridtrace/ui";
+import {
+  cn,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@gridtrace/ui";
 import {
   Activity,
   Boxes,
+  ChevronDown,
   ClipboardList,
   Database,
   Gauge,
   LayoutDashboard,
+  LogOut,
   type LucideIcon,
   Map as MapIcon,
   Settings,
@@ -17,27 +27,46 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { useAuth } from "@/lib/auth";
+import { ROLE_LABELS, type Role } from "@/lib/roles";
 
 interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  /** Roles allowed to see this entry. The shell is identical across roles; only
+   *  the available sections differ. */
+  roles: Role[];
+  /** Kept for title derivation but not rendered in the sidebar (e.g. Settings,
+   *  which now lives in the profile menu). */
+  hidden?: boolean;
 }
 
+const ALL: Role[] = ["admin", "analyst", "inspector"];
+
 const NAV: NavItem[] = [
-  { href: "/", label: "Command Center", icon: LayoutDashboard },
-  { href: "/map", label: "Risk Map", icon: MapIcon },
-  { href: "/assets", label: "Assets", icon: Boxes },
-  { href: "/customers", label: "Customers", icon: Users },
-  { href: "/inspections", label: "Inspections", icon: ClipboardList },
-  { href: "/analytics", label: "Model Analytics", icon: Activity },
-  { href: "/data-quality", label: "Data Quality", icon: Database },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/", label: "Command Center", icon: LayoutDashboard, roles: ALL },
+  { href: "/map", label: "Risk Map", icon: MapIcon, roles: ALL },
+  { href: "/assets", label: "Assets", icon: Boxes, roles: ["admin", "analyst"] },
+  { href: "/customers", label: "Customers", icon: Users, roles: ALL },
+  { href: "/inspections", label: "Inspections", icon: ClipboardList, roles: ["admin", "inspector"] },
+  { href: "/analytics", label: "Model Analytics", icon: Activity, roles: ["admin", "analyst"] },
+  { href: "/data-quality", label: "Data Quality", icon: Database, roles: ["admin", "analyst"] },
+  { href: "/settings", label: "Settings", icon: Settings, roles: ALL, hidden: true },
 ];
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0];
+  if (!first) return "—";
+  if (parts.length === 1) return first.slice(0, 2).toUpperCase();
+  const last = parts[parts.length - 1] ?? first;
+  return ((first[0] ?? "") + (last[0] ?? "")).toUpperCase();
 }
 
 // The navigation rail is a fixed near-black monochrome surface in both themes:
@@ -46,6 +75,10 @@ const RAIL = "bg-[#0A0A0A] dark:bg-[#0D0D0D] text-[#F5F5F2] border-[#2D2D2A]";
 
 function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const role = user?.role ?? "analyst";
+  const items = NAV.filter((item) => !item.hidden && item.roles.includes(role));
+
   return (
     <aside className={cn("flex w-56 shrink-0 flex-col border-r", RAIL)}>
       <div className="flex h-[52px] items-center gap-2.5 border-b border-[#2D2D2A] px-4">
@@ -55,7 +88,7 @@ function Sidebar() {
         <span className="text-sm font-semibold tracking-tight">GridTrace</span>
       </div>
       <nav className="flex-1 space-y-0.5 p-2">
-        {NAV.map((item) => {
+        {items.map((item) => {
           const active = isActive(pathname, item.href);
           return (
             <Link
@@ -92,6 +125,44 @@ function Sidebar() {
   );
 }
 
+function ProfileMenu() {
+  const { user, logout } = useAuth();
+  if (!user) return null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Open profile menu"
+          className="flex h-7 items-center gap-1.5 rounded-sm border border-border bg-surface py-0.5 pl-0.5 pr-1.5 text-foreground transition-colors hover:border-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-foreground text-[10px] font-semibold text-background">
+            {initials(user.name)}
+          </span>
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-foreground">{user.name}</span>
+          <span className="text-xs font-normal text-muted-foreground">{ROLE_LABELS[user.role]}</span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/settings">
+            <Settings className="h-4 w-4" />
+            Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => logout()}>
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function Topbar({ title }: { title?: string }) {
   return (
     <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-border bg-background px-6">
@@ -103,9 +174,7 @@ function Topbar({ title }: { title?: string }) {
           <span className="h-1.5 w-1.5 rounded-full bg-[#3C8D63]" aria-hidden />
           System nominal
         </span>
-        <div className="flex h-7 w-7 items-center justify-center rounded-sm border border-border bg-surface text-[11px] font-semibold text-foreground">
-          DO
-        </div>
+        <ProfileMenu />
       </div>
     </header>
   );

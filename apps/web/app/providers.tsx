@@ -3,6 +3,7 @@
 import { TooltipProvider } from "@gridtrace/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
+import { AuthProvider } from "@/lib/auth";
 import { ApiProvider } from "@/lib/client";
 import { DemoModeGate } from "@/lib/demo";
 
@@ -24,7 +25,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <DemoModeGate>
       <QueryClientProvider client={queryClient}>
         <ApiProvider>
-          <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
+          <AuthProvider>
+            <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
+          </AuthProvider>
         </ApiProvider>
       </QueryClientProvider>
     </DemoModeGate>
