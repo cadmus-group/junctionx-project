@@ -12,7 +12,6 @@ import {
 import {
   Activity,
   Boxes,
-  ChevronDown,
   ClipboardList,
   Database,
   Gauge,
@@ -109,10 +108,6 @@ function Sidebar() {
         })}
       </nav>
       <div className="space-y-2 border-t border-[#2D2D2A] p-3 text-[11px] text-white/55">
-        <div className="flex items-center justify-between">
-          <span className="font-semibold uppercase tracking-wide">Region</span>
-          <span className="tabular-nums text-white/80">Netherlands · EUR</span>
-        </div>
         <div className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-[#3C8D63]" aria-hidden />
           <span className="flex items-center gap-1.5">
@@ -134,12 +129,9 @@ function ProfileMenu() {
         <button
           type="button"
           aria-label="Open profile menu"
-          className="flex h-7 items-center gap-1.5 rounded-sm border border-border bg-surface py-0.5 pl-0.5 pr-1.5 text-foreground transition-colors hover:border-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex h-7 w-7 items-center justify-center rounded-sm bg-muted text-[11px] font-semibold text-foreground transition-colors hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-foreground text-[10px] font-semibold text-background">
-            {initials(user.name)}
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          {initials(user.name)}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
