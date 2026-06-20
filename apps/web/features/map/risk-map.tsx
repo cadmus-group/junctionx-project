@@ -49,7 +49,7 @@ export function RiskMap() {
   const { filters, setFilters } = useGlobalFilters();
   const { NEXT_PUBLIC_MAP_STYLE_URL } = getPublicEnv();
 
-  const [threshold, setThreshold] = useState<number>(filters.minRisk ?? 50);
+  const [threshold, setThreshold] = useState<number>(filters.minRisk ?? 0);
   const [visible, setVisible] = useState({ customers: true, transformers: true, hotspots: true });
   const [hover, setHover] = useState<{ feature: RiskPointFeature; x: number; y: number } | null>(
     null
