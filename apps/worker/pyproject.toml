@@ -13,7 +13,7 @@ dependencies = [
     "duckdb>=1.0",
     "httpx>=0.27.0",
     "numpy>=2.0",
-    "pandas",
+    "pandas>=2.2",
     "apscheduler>=3.10",
     "gridtrace-domain",
     "gridtrace-api",
@@ -49,3 +49,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/gridtrace_worker"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
