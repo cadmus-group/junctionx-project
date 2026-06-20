@@ -1,0 +1,40 @@
+# Git / editor
+.git
+.github
+.cursor
+**/.DS_Store
+
+# Local env and secrets
+.env
+.env.*
+
+# JS caches and installs
+node_modules
+**/.next
+**/.turbo
+**/node_modules
+playwright-report
+coverage
+
+# Python (not needed for web image)
+.venv
+**/__pycache__
+**/*.pyc
+uv.lock
+pyproject.toml
+requirements.txt
+packages/domain-py
+
+# Apps not required for @gridtrace/web build
+apps/api
+apps/worker
+apps/ml-lab
+apps/docs
+
+# Heavy local data / ML artifacts
+data
+apps/ml-lab/artifacts
+
+# Docs / misc
+*.md
+!apps/web/**/*.md
