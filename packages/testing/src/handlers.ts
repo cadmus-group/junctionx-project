@@ -1,6 +1,5 @@
 import type {
   AssetCustomerSummary,
-  AuthLoginResponse,
   Customer,
   CustomerRiskProfile,
   GridAsset,
@@ -49,16 +48,16 @@ let outcomeSeq = 100;
 
 export const handlers = [
   http.post(`${V1}/auth/login`, async ({ request }) => {
-    const body = (await request.json().catch(() => ({}))) as { email?: string };
-    const response: AuthLoginResponse = {
+    const body = (await request.json().catch(() => ({}))) as { username?: string };
+    const response = {
       access_token: "demo-token",
-      token_type: "bearer",
+      token_type: "bearer" as const,
       expires_in: 3600,
       user: {
         id: "demo-operator",
-        email: body.email ?? "operator@gridtrace.demo",
+        username: body.username ?? "demo_operator",
         name: "Demo Operator",
-        role: "analyst",
+        role: "operator",
       },
     };
     return HttpResponse.json(response);

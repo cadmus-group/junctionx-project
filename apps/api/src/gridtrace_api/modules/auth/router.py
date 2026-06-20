@@ -52,7 +52,7 @@ def get_user_from_db(username: str):
     """
     # Demo credentials: password is "SuperSecret123!" hashed using bcrypt
     demo_hashed_password = (
-        "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Z5W5qEAdBdzFmsS"
+        "$2b$12$vOEvU2EqIBTZhRkXrTJ6dOy9zhJZaEh0Rf94CNjKWFNE33iNxP2mC"
     )
 
     if username == "demo_operator":
