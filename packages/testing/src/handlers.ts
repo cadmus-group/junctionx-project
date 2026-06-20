@@ -227,6 +227,15 @@ export const handlers = [
     return HttpResponse.json(paginate(items, url));
   }),
 
+  http.get(`${V1}/inspections/missions`, ({ request }) => {
+    const data = getDemoDataset();
+    const url = new URL(request.url);
+    const missions = [...data.missions].sort((a, b) =>
+      (b.created_at ?? "").localeCompare(a.created_at ?? "")
+    );
+    return HttpResponse.json(paginate(missions, url));
+  }),
+
   http.post(`${V1}/inspections/missions`, async ({ request }) => {
     const data = getDemoDataset();
     const body = (await request.json()) as {

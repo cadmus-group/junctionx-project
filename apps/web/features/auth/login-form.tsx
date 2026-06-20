@@ -45,7 +45,7 @@ export function LoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { username: "demo_operator", password: "SuperSecret123!" },
+    defaultValues: { username: "", password: "" },
   });
 
   const onSubmit = handleSubmit(async (values) => {
