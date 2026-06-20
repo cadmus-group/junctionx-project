@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
-from pathlib import Path
 
 from gridtrace_api.db.models import AuditLog
 from sqlalchemy.orm import Session

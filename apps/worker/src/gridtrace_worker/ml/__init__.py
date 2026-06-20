@@ -19,7 +19,7 @@ def ml_deps_available() -> bool:
 
 def __getattr__(name: str):
     if name in ("MOMENTInferencePipeline", "MomentAnomalyResult"):
-        from gridtrace_worker.ml.moment_pipeline import MOMENTInferencePipeline, MomentAnomalyResult
+        from gridtrace_worker.ml.moment_pipeline import MomentAnomalyResult, MOMENTInferencePipeline
 
         return MOMENTInferencePipeline if name == "MOMENTInferencePipeline" else MomentAnomalyResult
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

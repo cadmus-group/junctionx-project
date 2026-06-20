@@ -24,13 +24,13 @@ from gridtrace_domain import unexplained_loss, unexplained_loss_ratio
 from sqlalchemy import delete, func, insert, select
 from sqlalchemy.orm import Session
 
+from gridtrace_worker.config import get_worker_config
 from gridtrace_worker.features import (
     FEATURE_VERSION,
     attach_peer_and_spatial,
     customer_feature_vector,
     transformer_feature_vector,
 )
-from gridtrace_worker.config import get_worker_config
 from gridtrace_worker.log import get_logger, log_event
 from gridtrace_worker.olap.duckdb_pipeline import parquet_paths
 

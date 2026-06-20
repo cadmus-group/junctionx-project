@@ -147,9 +147,8 @@ class DutchEnergySpatialIngestion:
         for record in records:
             record["solar_potential_flag"] = record.pop("has_solar_potential")
 
-        async with AsyncSessionLocal() as session:
-            async with session.begin():
-                await session.execute(_UPDATE_CUSTOMERS, records)
+        async with AsyncSessionLocal() as session, session.begin():
+            await session.execute(_UPDATE_CUSTOMERS, records)
 
         return len(records)
 

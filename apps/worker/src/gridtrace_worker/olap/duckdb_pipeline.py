@@ -12,10 +12,9 @@ from typing import Any
 
 import duckdb
 import polars as pl
+from gridtrace_api.db.models import Customer, MeterReading
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
-from gridtrace_api.db.models import Customer, MeterReading
 
 
 def parquet_paths(processed_root: Path | str) -> dict[str, Path]:

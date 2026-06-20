@@ -14,7 +14,11 @@ from gridtrace_worker.jobs.generate_synthetic import (
     SHOWCASE_TRANSFORMER_INDEX,
     build_demo_dataset,
 )
-from gridtrace_worker.scoring import customer_components, replace_anomaly_component, transformer_components
+from gridtrace_worker.scoring import (
+    customer_components,
+    replace_anomaly_component,
+    transformer_components,
+)
 
 
 def _features_for_transformer(ds, tx_index):

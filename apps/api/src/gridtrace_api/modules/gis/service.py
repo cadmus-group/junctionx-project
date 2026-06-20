@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gridtrace_api.db.models import Customer, RiskScore
 from gridtrace_api.shared.geo import feature, feature_collection
 
-
 _HIGH_RISK_METERS_SQL = """
 SELECT jsonb_build_object(
     'type', 'FeatureCollection',

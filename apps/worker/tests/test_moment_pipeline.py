@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-
 from gridtrace_worker.ml.moment_pipeline import (
-    build_peak_explanation_entries,
-    instance_normalize,
-    mse_to_anomaly_scores,
-    moment_peak_explanations,
-    pad_sequence,
     MomentAnomalyResult,
     _parse_database_url_for_duckdb,
+    build_peak_explanation_entries,
+    instance_normalize,
+    moment_peak_explanations,
+    mse_to_anomaly_scores,
+    pad_sequence,
 )
 from gridtrace_worker.scoring import customer_components, replace_anomaly_component
 
