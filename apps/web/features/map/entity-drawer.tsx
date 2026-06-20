@@ -16,15 +16,18 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useApi } from "@/lib/client";
+import { SpatialContextSection } from "@/src/components/customers/customer-drawer";
 
 export function EntityDrawer({
   selectedId,
+  selectedType,
   onClose,
 }: {
   selectedId: string | null;
+  selectedType?: "customer" | "transformer" | null;
   onClose: () => void;
 }) {
-  const isTransformer = selectedId?.startsWith("tx-") ?? false;
+  const isTransformer = selectedType === "transformer";
   return (
     <Sheet open={!!selectedId} onOpenChange={(open) => (!open ? onClose() : undefined)}>
       <SheetContent side="right" className="w-[24rem]">
@@ -48,7 +51,7 @@ function CustomerPanel({ id }: { id: string }) {
   if (query.isError || !query.data)
     return <p className="text-sm text-danger">Could not load customer.</p>;
 
-  const { customer, risk } = query.data;
+  const { customer, risk, peer_comparison, spatial_context } = query.data;
   const currency = risk.currency as Currency;
   return (
     <>
@@ -70,6 +73,11 @@ function CustomerPanel({ id }: { id: string }) {
         <Row label="Confidence" value={`${Math.round(risk.confidence * 100)}%`} />
         <Row label="Model" value={risk.model_version} />
       </dl>
+      <SpatialContextSection
+        spatialContext={spatial_context}
+        baselineAnnualKwh={customer.baseline_annual_kwh}
+        peerComparison={peer_comparison}
+      />
       <Button asChild variant="outline" size="sm" className="mt-4">
         <Link href={`/customers/${customer.id}`}>
           Open investigation

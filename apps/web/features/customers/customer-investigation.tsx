@@ -25,6 +25,7 @@ import { ExplanationList } from "@/components/explanation-list";
 import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
 import { AddToMissionDialog } from "@/features/inspections/add-to-mission-dialog";
+import { SpatialContextSection } from "@/src/components/customers/customer-drawer";
 
 const COMPONENT_LABELS: Record<keyof RiskComponents, string> = {
   supervised_probability: "Supervised model",
@@ -42,7 +43,7 @@ export function CustomerInvestigation({ id }: { id: string }) {
     <div className="flex flex-col">
       <QueryBoundary query={profileQuery}>
         {(profile) => {
-          const { customer, risk, peer_comparison, loss_attribution_share, notes } = profile;
+          const { customer, risk, peer_comparison, spatial_context, loss_attribution_share, notes } = profile;
           const currency = risk.currency as Currency;
           return (
             <>
@@ -106,6 +107,23 @@ export function CustomerInvestigation({ id }: { id: string }) {
                 </div>
 
                 <div className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Peer baseline</CardTitle>
+                      <CardDescription>
+                        Dutch Energy street-level consumption context for this meter.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <SpatialContextSection
+                        spatialContext={spatial_context}
+                        baselineAnnualKwh={customer.baseline_annual_kwh}
+                        peerComparison={peer_comparison}
+                        showHeading={false}
+                      />
+                    </CardContent>
+                  </Card>
+
                   <Card>
                     <CardHeader>
                       <CardTitle>Loss estimate</CardTitle>

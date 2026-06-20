@@ -1,0 +1,6 @@
+[
+  {"lon": 4.898, "lat": 52.372, "radius_deg": 0.006, "label": "high_solar_roof"},
+  {"lon": 4.908, "lat": 52.366, "radius_deg": 0.007, "label": "existing_pv"},
+  {"lon": 4.918, "lat": 52.374, "radius_deg": 0.005, "label": "high_solar_roof"},
+  {"lon": 4.888, "lat": 52.362, "radius_deg": 0.008, "label": "existing_pv"}
+]

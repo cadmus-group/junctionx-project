@@ -35,5 +35,6 @@ no invalid migrations · no committed secrets.
 
 ```bash
 pnpm lint && pnpm typecheck && pnpm test
-uv run ruff check . && uv run mypy packages/domain-py/src apps/api/src && uv run pytest
+source .venv/bin/activate
+ruff check . && mypy packages/domain-py/src apps/api/src && pytest
 ```

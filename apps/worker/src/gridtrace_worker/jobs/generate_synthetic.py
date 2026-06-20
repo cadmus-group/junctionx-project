@@ -48,6 +48,7 @@ from shapely.geometry import Point
 from sqlalchemy import insert
 from sqlalchemy.orm import Session
 
+from gridtrace_worker.connectors.amsterdam_context import AmsterdamContextConnector
 from gridtrace_worker.log import get_logger, log_event
 
 logger = get_logger("generate_synthetic")
@@ -468,9 +469,11 @@ def persist_dataset(session: Session, dataset: DemoDataset) -> dict:
     session.flush()
 
     customer_ids: dict[str, str] = {}
+    amsterdam_ctx = AmsterdamContextConnector()
     for c in dataset.customers:
         cid = str(uuid.uuid4())
         customer_ids[c.external_ref] = cid
+        ctx = amsterdam_ctx.classify_customer(c.lon, c.lat)
         session.add(
             Customer(
                 id=cid,
@@ -483,11 +486,14 @@ def persist_dataset(session: Session, dataset: DemoDataset) -> dict:
                 customer_type=c.customer_type,
                 tariff_type="single",
                 building_type="apartment" if c.customer_type == "residential" else "office",
+                woningwaarde_category=ctx.get("woningwaarde_category"),
+                solar_potential_flag=bool(ctx.get("solar_potential_flag")),
                 geometry=_point(c.lon, c.lat),
                 metadata_json={
                     "incident": c.incident,
                     "is_ntl": bool(c.is_ntl),
                     "seed_label": True,
+                    "zonatlas_label": ctx.get("zonatlas_label"),
                 },
             )
         )

@@ -155,6 +155,17 @@
       },
       "CustomerOut": {
         "properties": {
+          "baseline_annual_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Annual Kwh"
+          },
           "building_type": {
             "anyOf": [
               {
@@ -237,6 +248,17 @@
               }
             ],
             "title": "Risk Tier"
+          },
+          "street_smartmeter_perc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Street Smartmeter Perc"
           },
           "tariff_type": {
             "anyOf": [
@@ -329,6 +351,16 @@
           },
           "risk": {
             "$ref": "#/components/schemas/RiskScoreOut"
+          },
+          "spatial_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpatialContextOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -919,18 +951,21 @@
       },
       "LoginRequest": {
         "properties": {
-          "email": {
-            "format": "email",
-            "title": "Email",
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
             "type": "string"
           },
-          "password": {
-            "title": "Password",
+          "username": {
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
             "type": "string"
           }
         },
         "required": [
-          "email",
+          "username",
           "password"
         ],
         "title": "LoginRequest",
@@ -1543,6 +1578,56 @@
         "title": "RouteResponse",
         "type": "object"
       },
+      "SpatialContextOut": {
+        "properties": {
+          "baseline_annual_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Annual Kwh"
+          },
+          "baseline_deviation_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Deviation Ratio"
+          },
+          "recent_annualized_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recent Annualized Kwh"
+          },
+          "street_smartmeter_perc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Street Smartmeter Perc"
+          }
+        },
+        "title": "SpatialContextOut",
+        "type": "object"
+      },
       "SubmitOutcomeRequest": {
         "properties": {
           "confirmed_loss_type": {
@@ -1735,10 +1820,6 @@
       },
       "UserInfo": {
         "properties": {
-          "email": {
-            "title": "Email",
-            "type": "string"
-          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -1750,11 +1831,15 @@
           "role": {
             "title": "Role",
             "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "email",
+          "username",
           "name",
           "role"
         ],
@@ -2130,7 +2215,6 @@
     },
     "/api/v1/auth/login": {
       "post": {
-        "description": "Demo authentication. Any credentials succeed in demo mode and mint a JWT.",
         "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {

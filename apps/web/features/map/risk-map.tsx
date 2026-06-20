@@ -15,14 +15,34 @@ import {
 import { Card, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger, Button, Label, Slider } from "@gridtrace/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Layers } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useApi } from "@/lib/client";
 import { getPublicEnv } from "@/lib/env";
 import { useGlobalFilters } from "@/lib/use-filters";
 import { FilterBar } from "@/components/filter-bar";
+import { MapTooltip } from "@/src/components/map/map-tooltip";
 import { EntityDrawer } from "./entity-drawer";
 
 const EMPTY: RiskPointCollection = { type: "FeatureCollection", features: [] };
+
+function normalizeCustomers(raw: FeatureCollection): RiskPointCollection {
+  return {
+    type: "FeatureCollection",
+    features: raw.features.map((f) => {
+      const props = (f.properties ?? {}) as Record<string, unknown>;
+      const entityId = String(props.entity_id ?? props.customer_id ?? f.id ?? "");
+      return {
+        ...f,
+        geometry: f.geometry as Point,
+        properties: {
+          ...props,
+          entity_id: entityId,
+          entity_type: (props.entity_type as string) ?? "customer",
+        },
+      };
+    }),
+  };
+}
 
 export function RiskMap() {
   const api = useApi();
@@ -31,12 +51,18 @@ export function RiskMap() {
 
   const [threshold, setThreshold] = useState<number>(filters.minRisk ?? 50);
   const [visible, setVisible] = useState({ customers: true, transformers: true, hotspots: true });
+  const [hover, setHover] = useState<{ feature: RiskPointFeature; x: number; y: number } | null>(
+    null
+  );
 
   const anomaliesQuery = useQuery(api.gis.anomalies({ min_risk: threshold }));
   const hotspotsQuery = useQuery(api.gis.hotspots({ min_risk: 0 }));
   const assetsQuery = useQuery(api.assets.list({ page: 1, page_size: 50, asset_type: "transformer" }));
 
-  const customers = (anomaliesQuery.data as RiskPointCollection | undefined) ?? EMPTY;
+  const customers = useMemo(
+    () => normalizeCustomers((anomaliesQuery.data as FeatureCollection | undefined) ?? EMPTY),
+    [anomaliesQuery.data]
+  );
   const hotspots = (hotspotsQuery.data as FeatureCollection | undefined) ?? {
     type: "FeatureCollection",
     features: [],
@@ -65,8 +91,21 @@ export function RiskMap() {
   }, [assetsQuery.data]);
 
   const selectedId = filters.selected ?? null;
+  const selectedType = filters.selectedType ?? null;
 
-  const select = (id: string) => setFilters({ selected: id }, { replace: true });
+  const select = (id: string, entityType: "customer" | "transformer") =>
+    setFilters({ selected: id, selectedType: entityType }, { replace: true });
+
+  const onHover = useCallback(
+    (id: string | null, feature: RiskPointFeature | null, x: number, y: number) => {
+      if (!id || !feature) {
+        setHover(null);
+        return;
+      }
+      setHover({ feature, x, y });
+    },
+    []
+  );
 
   const layers = useMemo(() => {
     const result = [];
@@ -77,7 +116,8 @@ export function RiskMap() {
       result.push(
         createTransformerLayer(transformers, {
           selectedId,
-          onSelect: (id: string) => select(id),
+          onSelect: (id, feature) =>
+            select(id, (feature.properties.entity_type as "customer" | "transformer") ?? "transformer"),
         })
       );
     }
@@ -85,14 +125,16 @@ export function RiskMap() {
       result.push(
         createCustomerRiskLayer(customers, {
           selectedId,
-          onSelect: (id: string) => select(id),
+          onSelect: (id, feature) =>
+            select(id, (feature.properties.entity_type as "customer" | "transformer") ?? "customer"),
+          onHover,
         })
       );
     }
     return result;
     // select is stable enough for the demo; deps cover the data + view state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customers, transformers, hotspots, visible, selectedId]);
+  }, [customers, transformers, hotspots, visible, selectedId, onHover]);
 
   const bounds = useMemo(() => fitBoundsToGeometry(customers as FeatureCollection), [customers]);
 
@@ -152,13 +194,15 @@ export function RiskMap() {
             className="relative h-full w-full"
           >
             <MapLegend />
+            <MapTooltip feature={hover?.feature ?? null} x={hover?.x ?? 0} y={hover?.y ?? 0} />
           </GridTraceMap>
         </Card>
       </div>
 
       <EntityDrawer
         selectedId={selectedId}
-        onClose={() => setFilters({ selected: undefined }, { replace: true })}
+        selectedType={selectedType}
+        onClose={() => setFilters({ selected: undefined, selectedType: undefined }, { replace: true })}
       />
     </div>
   );

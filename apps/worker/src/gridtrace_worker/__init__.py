@@ -9,4 +9,4 @@ worker never duplicates domain logic or schema.
 __version__ = "0.1.0"
 
 FEATURE_VERSION = "features-v1"
-MODEL_VERSION = "ntl-blend-v1"
+MODEL_VERSION = "ntl-moment-hybrid-v1"

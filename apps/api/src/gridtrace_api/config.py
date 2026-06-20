@@ -44,8 +44,34 @@ class Settings(BaseSettings):
         default="./apps/ml-lab/artifacts", alias="MODEL_ARTIFACT_PATH"
     )
 
-    # CORS
-    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    # MOMENT TSFM inference (worker background scoring)
+    moment_enabled: bool = Field(default=False, alias="MOMENT_ENABLED")
+    moment_model_name: str = Field(
+        default="AutonLab/MOMENT-1-large", alias="MOMENT_MODEL_NAME"
+    )
+    moment_context_length: int = Field(default=512, alias="MOMENT_CONTEXT_LENGTH")
+    moment_batch_size: int = Field(default=32, alias="MOMENT_BATCH_SIZE")
+    moment_device: str | None = Field(default=None, alias="MOMENT_DEVICE")
+
+    # Amsterdam hybrid open-data + NED macro baseline
+    ned_api_key: str | None = Field(default=None, alias="NATIONAAL_ENERGIE_DASHBOARD_API_KEY")
+    data_raw_path: str = Field(default="./data/raw", alias="DATA_RAW_PATH")
+    data_processed_path: str = Field(default="./data/processed", alias="DATA_PROCESSED_PATH")
+
+    # CORS — allow any localhost port in dev (Next.js may bind 3001+ when 3000 is taken)
+    cors_origins: list[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3001",
+        ],
+        alias="CORS_ORIGINS",
+    )
+    cors_origin_regex: str | None = Field(
+        default=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+        alias="CORS_ORIGIN_REGEX",
+    )
 
     @property
     def is_sqlite(self) -> bool:

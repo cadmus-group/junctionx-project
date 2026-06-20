@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 # Apply database migrations to head.
 set -euo pipefail
-cd "$(dirname "$0")/../apps/api"
 
-if command -v uv >/dev/null 2>&1; then
-  uv run alembic upgrade head
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT/apps/api"
+PY="$("$ROOT/scripts/py.sh")"
+
+if [ "$PY" = "python3" ] && [ ! -x "$ROOT/.venv/bin/python" ]; then
+  PYTHONPATH="src:../../packages/domain-py/src" "$PY" -m alembic upgrade head
 else
-  PYTHONPATH="src:../../packages/domain-py/src" alembic upgrade head
+  "$PY" -m alembic upgrade head
 fi

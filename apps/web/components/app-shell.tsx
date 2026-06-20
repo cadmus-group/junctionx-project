@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { getPublicEnv } from "@/lib/env";
 
 interface NavItem {
   href: string;
@@ -79,12 +80,21 @@ function Sidebar() {
 }
 
 function Topbar({ title }: { title?: string }) {
+  const { NEXT_PUBLIC_DEMO_MODE, NEXT_PUBLIC_API_BASE_URL } = getPublicEnv();
   return (
     <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-border bg-background px-6">
       <div className="flex items-center gap-2">
         <h1 className="text-sm font-semibold tracking-tight">{title ?? "GridTrace"}</h1>
+        {NEXT_PUBLIC_DEMO_MODE ? (
+          <span className="rounded-sm border border-warning/40 bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning">
+            Demo mode (mock data)
+          </span>
+        ) : null}
       </div>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="hidden truncate sm:inline" title={NEXT_PUBLIC_API_BASE_URL}>
+          API {NEXT_PUBLIC_API_BASE_URL.replace(/^https?:\/\//, "")}
+        </span>
         <span className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2 py-1">
           <span className="h-1.5 w-1.5 rounded-full bg-[#3C8D63]" aria-hidden />
           System nominal

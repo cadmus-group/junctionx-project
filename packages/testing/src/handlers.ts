@@ -1,6 +1,5 @@
 import type {
   AssetCustomerSummary,
-  AuthLoginResponse,
   Customer,
   CustomerRiskProfile,
   GridAsset,
@@ -49,16 +48,16 @@ let outcomeSeq = 100;
 
 export const handlers = [
   http.post(`${V1}/auth/login`, async ({ request }) => {
-    const body = (await request.json().catch(() => ({}))) as { email?: string };
-    const response: AuthLoginResponse = {
+    const body = (await request.json().catch(() => ({}))) as { username?: string };
+    const response = {
       access_token: "demo-token",
-      token_type: "bearer",
+      token_type: "bearer" as const,
       expires_in: 3600,
       user: {
         id: "demo-operator",
-        email: body.email ?? "operator@gridtrace.demo",
+        username: body.username ?? "demo_operator",
         name: "Demo Operator",
-        role: "analyst",
+        role: "operator",
       },
     };
     return HttpResponse.json(response);
@@ -136,10 +135,27 @@ export const handlers = [
     const customer = data.customers.find((c) => c.id === id);
     const risk = data.riskScores.get(id);
     if (!customer || !risk) return problem(404, "Customer not found", `No customer ${id}`);
+    const peers = data.peerComparison.get(id) ?? [];
+    const recent = peers.slice(-14);
+    const dailyAvg = recent.length
+      ? recent.reduce((sum, p) => sum + p.customer_kwh, 0) / recent.length
+      : null;
+    const recentAnnualized = dailyAvg != null ? dailyAvg * 365 : null;
+    const baseline = customer.baseline_annual_kwh;
+    const deviation =
+      baseline != null && baseline > 0 && recentAnnualized != null
+        ? (recentAnnualized - baseline) / baseline
+        : null;
     const profile: CustomerRiskProfile = {
       customer,
       risk,
-      peer_comparison: data.peerComparison.get(id) ?? [],
+      peer_comparison: peers,
+      spatial_context: {
+        baseline_annual_kwh: baseline,
+        street_smartmeter_perc: customer.street_smartmeter_perc,
+        recent_annualized_kwh: recentAnnualized != null ? round(recentAnnualized, 2) : null,
+        baseline_deviation_ratio: deviation != null ? round(deviation, 4) : null,
+      },
       loss_attribution_share: data.lossAttribution.get(id) ?? 0,
       notes: [
         "This is a model-generated risk indicator, not a determination of wrongdoing.",

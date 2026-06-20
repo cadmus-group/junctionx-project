@@ -34,7 +34,7 @@ export type RiskPointCollection = FeatureCollection<Point, RiskPointProperties>;
 
 export interface LayerCallbacks {
   onSelect?: (id: string, feature: RiskPointFeature) => void;
-  onHover?: (id: string | null, feature: RiskPointFeature | null) => void;
+  onHover?: (id: string | null, feature: RiskPointFeature | null, x: number, y: number) => void;
   selectedId?: string | null;
 }
 
@@ -86,7 +86,7 @@ export function createCustomerRiskLayer(
     onClick: pickHandler(onSelect),
     onHover: (info: PickingInfo) => {
       const object = info.object as RiskPointFeature | undefined;
-      onHover?.(object?.properties.entity_id ?? null, object ?? null);
+      onHover?.(object?.properties.entity_id ?? null, object ?? null, info.x, info.y);
     },
     updateTriggers: {
       getLineColor: [selectedId],
@@ -126,7 +126,7 @@ export function createTransformerLayer(
     onClick: pickHandler(onSelect),
     onHover: (info: PickingInfo) => {
       const object = info.object as RiskPointFeature | undefined;
-      onHover?.(object?.properties.entity_id ?? null, object ?? null);
+      onHover?.(object?.properties.entity_id ?? null, object ?? null, info.x, info.y);
     },
     updateTriggers: {
       getLineColor: [selectedId],

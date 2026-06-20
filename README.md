@@ -43,7 +43,7 @@ fully offline with deterministic synthetic data.
 
 | Layer        | Choice |
 |--------------|--------|
-| Monorepo     | Turborepo, pnpm (JS), uv (Python), Makefile |
+| Monorepo     | Turborepo, pnpm (JS), pip + venv (Python), Makefile |
 | Frontend     | Next.js (App Router), TypeScript strict, Tailwind, shadcn/ui, Lucide, MapLibre GL, deck.gl, TanStack Query/Table, ECharts, RHF + Zod |
 | Backend      | FastAPI, Pydantic, SQLAlchemy 2.0 async, GeoAlchemy2, Alembic, orjson, httpx |
 | ML           | scikit-learn, CatBoost, LightGBM, Isolation Forest, SHAP, Parquet |
@@ -66,7 +66,7 @@ docs/        architecture, adr, api, data, demo
 ## Prerequisites
 
 - Node.js (active LTS; see `.nvmrc`) and **pnpm 10+**
-- Python **3.11+** and **uv**
+- Python **3.11+** and **pip**
 - Docker + Docker Compose (for PostgreSQL/PostGIS)
 
 ## Local setup
@@ -74,11 +74,21 @@ docs/        architecture, adr, api, data, demo
 ```bash
 cp .env.example .env
 pnpm install
-uv sync --all-packages
+./scripts/pip-install.sh
 docker compose up -d postgres      # waits for PostGIS to be healthy
 pnpm db:migrate
 pnpm db:seed
 pnpm dev
+```
+
+For MOMENT TSFM scoring, install ML extras then enable in `.env`:
+
+```bash
+./scripts/pip-install.sh              # base worker (fast)
+./scripts/pip-install-ml.sh           # MOMENT deps only (~2GB download)
+# set MOMENT_ENABLED=true in .env
+source .venv/bin/activate
+python -m gridtrace_worker.main score-moment
 ```
 
 Or the shortcut:
@@ -90,8 +100,11 @@ make install && make up && make migrate && make seed && make dev
 | Service | URL |
 |---------|-----|
 | Web     | http://localhost:3000 |
-| API     | http://localhost:8000 |
-| OpenAPI | http://localhost:8000/docs |
+| API     | http://localhost:8003 |
+| OpenAPI | http://localhost:8003/docs |
+
+> **Note:** Local development uses port **8003** for the API (instead of 8000) to avoid
+> conflicts with other services — especially Docker containers that commonly bind to 8000.
 
 **Offline demo mode:** set `NEXT_PUBLIC_DEMO_MODE=true` and the web app serves
 itself from in-browser mocks + cached GeoJSON — no backend or database required.
@@ -106,7 +119,8 @@ and local filesystem storage is used when object storage is not configured.
 
 ```bash
 pnpm db:migrate                         # alembic upgrade head
-cd apps/api && uv run alembic revision --autogenerate -m "change"
+source .venv/bin/activate
+cd apps/api && python -m alembic revision --autogenerate -m "change"
 ```
 
 Seed data is kept **out** of migrations. See [`apps/api/alembic/README.md`](./apps/api/alembic/README.md).
@@ -123,7 +137,8 @@ plus 3 seeded incidents (partial bypass, coordinated cluster, meter fault). See
 ```bash
 pnpm test          # TS unit (Vitest)
 pnpm test:e2e      # Playwright primary flow
-uv run pytest      # Python unit + integration
+source .venv/bin/activate
+pytest             # Python unit + integration
 ```
 
 ## Demo workflow

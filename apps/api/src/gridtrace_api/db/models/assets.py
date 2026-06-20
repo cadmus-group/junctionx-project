@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from geoalchemy2 import Geometry
-from sqlalchemy import DateTime, Float, ForeignKey, Index, String
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Numeric, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -40,6 +40,7 @@ class Customer(Base):
     __table_args__ = (
         Index("ix_customers_geometry", "geometry", postgresql_using="gist"),
         Index("ix_customers_transformer_id", "transformer_id"),
+        Index("ix_customers_zipcode", "zipcode"),
     )
 
     id: Mapped[str] = uuid_pk()
@@ -56,6 +57,11 @@ class Customer(Base):
     customer_type: Mapped[str] = mapped_column(String, nullable=False)
     tariff_type: Mapped[str | None] = mapped_column(String, nullable=True)
     building_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    woningwaarde_category: Mapped[str | None] = mapped_column(String, nullable=True)
+    zipcode: Mapped[str | None] = mapped_column(String, nullable=True)
+    baseline_annual_kwh: Mapped[float | None] = mapped_column(Numeric, nullable=True)
+    street_smartmeter_perc: Mapped[float | None] = mapped_column(Numeric, nullable=True)
+    solar_potential_flag: Mapped[bool] = mapped_column(Boolean, default=False)
     geometry: Mapped[Any | None] = mapped_column(
         Geometry(geometry_type="POINT", srid=4326, spatial_index=False), nullable=True
     )

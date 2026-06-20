@@ -45,3 +45,8 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency yielding a database session."""
     async with get_sessionmaker()() as session:
         yield session
+
+
+def AsyncSessionLocal() -> AsyncSession:
+    """Return a new async session (context-manager compatible factory)."""
+    return get_sessionmaker()()

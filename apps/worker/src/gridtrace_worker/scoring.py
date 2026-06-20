@@ -27,6 +27,7 @@ SPATIAL_REF = 0.50
 ANOMALY_Z_K = 3.0
 SUPERVISED_SLOPE = 2.0
 FLATLINE_SUPERVISED_DAMPING = 0.70  # meter-fault flatline suppresses theft confidence
+SOLAR_FALSE_POSITIVE_DAMPING = 0.65  # verified solar roofs suppress daylight-drop alarms
 
 # Transformer-level mapping references.
 TX_SUPERVISED_LO = 0.02
@@ -56,13 +57,19 @@ def customer_components(features: dict) -> ScoredEntity:
     peer_dev = features.get("peer_deviation", 0.0)
     flatline = float(features.get("flatline", 0.0))
     anomaly_z = abs(features.get("anomaly_z", 0.0))
+    solar_flag = bool(features.get("solar_potential_flag", False))
+    daylight_drop = float(features.get("daylight_drop_index", 0.0))
 
     inner = SUPERVISED_SLOPE * (2.2 * drop_severity + 1.8 * max(0.0, peer_dev) - 0.55)
     supervised = _sigmoid(inner)
     supervised *= 1.0 - FLATLINE_SUPERVISED_DAMPING * flatline
+    if solar_flag and (drop_severity > 0.2 or daylight_drop > 0.3):
+        supervised *= 1.0 - SOLAR_FALSE_POSITIVE_DAMPING
 
     anomaly = 1.0 - math.exp(-anomaly_z / ANOMALY_Z_K)
     anomaly = max(anomaly, flatline)  # a flatline is a strong anomaly
+    if solar_flag and daylight_drop > 0.3:
+        anomaly *= 1.0 - SOLAR_FALSE_POSITIVE_DAMPING
 
     grid = _clamp01(features.get("grid_unexplained_ratio", 0.0) / GRID_RATIO_REF)
     peer = _clamp01(max(0.0, peer_dev) / PEER_DEV_REF)
@@ -120,6 +127,26 @@ _COMPONENT_LABELS = {
 }
 
 
+def replace_anomaly_component(entity: ScoredEntity, anomaly_score: float) -> ScoredEntity:
+    """Recompose composite score after swapping in a MOMENT-derived anomaly component."""
+    c = entity.components
+    new_components = RiskComponents(
+        supervised_probability=c.supervised_probability,
+        anomaly_score=_clamp01(anomaly_score),
+        grid_imbalance_score=c.grid_imbalance_score,
+        peer_score=c.peer_score,
+        spatial_score=c.spatial_score,
+    )
+    score = risk_score(new_components)
+    return ScoredEntity(
+        new_components,
+        score,
+        risk_tier_for_score(score),
+        entity.confidence,
+        entity.suspicion_weight,
+    )
+
+
 def build_explanations(
     entity: ScoredEntity,
     features: dict,
@@ -161,6 +188,20 @@ def build_explanations(
                 "contribution": 1.0,
                 "direction": "increases",
                 "detail": "Meter reads near-zero with no variation; investigate meter fault before fraud escalation.",
+            }
+        )
+
+    if features.get("solar_potential_flag") and features.get("daylight_drop_index", 0.0) > 0.3:
+        top.append(
+            {
+                "feature": "solar_potential_flag",
+                "label": "Verified solar infrastructure (Zonatlas)",
+                "contribution": 0.0,
+                "direction": "decreases",
+                "detail": (
+                    "Consumption dropped during daylight hours but the building has verified "
+                    "solar potential according to Zonatlas; false-alarm risk heavily penalized."
+                ),
             }
         )
 

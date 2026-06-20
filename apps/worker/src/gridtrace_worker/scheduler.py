@@ -9,7 +9,15 @@ from __future__ import annotations
 
 from gridtrace_worker.config import get_worker_config
 from gridtrace_worker.db import session_scope
-from gridtrace_worker.jobs import build_features, build_hotspots, ingest_context, score_entities
+from gridtrace_worker.jobs import (
+    build_features,
+    build_hotspots,
+    enrich_amsterdam_context,
+    ingest_context,
+    poll_ned,
+    score_entities,
+    sync_olap,
+)
 from gridtrace_worker.log import get_logger, log_event
 
 logger = get_logger("scheduler")
@@ -17,15 +25,26 @@ logger = get_logger("scheduler")
 
 def _refresh_scores() -> None:
     """Recompute features, scores, and hotspots from current readings."""
+    cfg = get_worker_config()
+    log_event(
+        logger,
+        "refresh_scores_start",
+        moment_enabled=cfg.moment_active,
+        model_version=cfg.moment_model_name if cfg.moment_active else None,
+    )
     with session_scope() as session:
+        poll_ned.run(session)
+        sync_olap.run(session)
         build_features.run(session)
         score_entities.run(session)
         build_hotspots.run(session)
+    log_event(logger, "refresh_scores_complete")
 
 
 def _ingest() -> None:
     with session_scope() as session:
         ingest_context.run(session)
+        enrich_amsterdam_context.run(session)
 
 
 def build_apscheduler(score_interval_minutes: int = 30, ingest_interval_minutes: int = 60):

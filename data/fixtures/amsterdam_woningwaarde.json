@@ -1,0 +1,7 @@
+[
+  {"lon": 4.895, "lat": 52.370, "category": "A", "radius_deg": 0.008},
+  {"lon": 4.905, "lat": 52.365, "category": "B", "radius_deg": 0.010},
+  {"lon": 4.915, "lat": 52.375, "category": "C", "radius_deg": 0.012},
+  {"lon": 4.885, "lat": 52.360, "category": "D", "radius_deg": 0.009},
+  {"lon": 4.925, "lat": 52.368, "category": "E", "radius_deg": 0.011}
+]

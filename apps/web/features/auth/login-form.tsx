@@ -19,8 +19,8 @@ import { Zap } from "lucide-react";
 import { setToken, useApi } from "@/lib/client";
 
 const loginSchema = z.object({
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(1, "Password is required"),
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
@@ -36,7 +36,7 @@ export function LoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "operator@gridtrace.demo", password: "demo" },
+    defaultValues: { username: "demo_operator", password: "SuperSecret123!" },
   });
 
   const onSubmit = handleSubmit(async (values) => {
@@ -68,10 +68,10 @@ export function LoginForm() {
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="username" {...register("email")} />
-              {errors.email ? (
-                <p className="text-xs text-danger">{errors.email.message}</p>
+              <Label htmlFor="username">Username</Label>
+              <Input id="username" type="text" autoComplete="username" {...register("username")} />
+              {errors.username ? (
+                <p className="text-xs text-danger">{errors.username.message}</p>
               ) : null}
             </div>
             <div className="space-y-1.5">
@@ -91,7 +91,7 @@ export function LoginForm() {
               {isSubmitting ? "Signing in…" : "Sign in"}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Demo mode accepts any credentials.
+              Demo: demo_operator / SuperSecret123!
             </p>
           </form>
         </CardContent>
