@@ -35,8 +35,9 @@ export function DemoModeGate({ children }: { children: ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="flex h-screen w-full items-center justify-center text-sm text-muted-foreground">
-        Starting GridTrace demo environment…
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
+        <img src="/logo_icon.png" alt="" className="h-10 w-10" />
+        Starting Atlas demo environment…
       </div>
     );
   }

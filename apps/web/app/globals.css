@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /*
-  GridTrace — sharp monochrome operational interface.
+  Atlas — sharp monochrome operational interface.
   Product chrome is black / white / neutral gray. Color is reserved for data
   meaning: risk states, analytical series, map overlays, status and selection.
   Light and dark themes are structurally identical.
@@ -119,6 +119,13 @@
 @layer utilities {
   .tabular-nums {
     font-variant-numeric: tabular-nums;
+  }
+
+  .login-bg {
+    background-color: rgb(var(--background));
+    background-image:
+      radial-gradient(ellipse 75% 55% at 50% 35%, rgb(var(--surface-subtle) / 0.5), transparent 68%),
+      linear-gradient(160deg, rgb(var(--background)), rgb(var(--surface-subtle) / 0.15));
   }
 }
 

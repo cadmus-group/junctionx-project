@@ -16,7 +16,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Zap } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/client";
 import { ROLE_HOME, resolveRole } from "@/lib/roles";
@@ -64,13 +63,11 @@ export function LoginForm() {
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="login-bg flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
-          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-sm bg-primary text-primary-foreground">
-            <Zap className="h-5 w-5" />
-          </div>
-          <CardTitle>Sign in to GridTrace</CardTitle>
+          <img src="/logo_full.svg" alt="Atlas" className="mb-2 h-8 w-auto" />
+          <CardTitle>Sign in to Atlas</CardTitle>
           <CardDescription>
             Find where energy disappears, explain why, and prioritize what to inspect.
           </CardDescription>
