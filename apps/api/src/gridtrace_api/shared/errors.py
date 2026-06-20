@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import ORJSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+logger = logging.getLogger(__name__)
 
 
 class DomainError(Exception):
@@ -65,4 +70,24 @@ def register_exception_handlers(app: FastAPI) -> None:
     ) -> ORJSONResponse:
         return _problem(
             422, "Validation error", str(exc.errors()), str(request.url.path)
+        )
+
+    @app.exception_handler(SQLAlchemyError)
+    async def _database(request: Request, exc: SQLAlchemyError) -> ORJSONResponse:
+        logger.exception("Database error on %s", request.url.path)
+        return _problem(
+            500,
+            "Database error",
+            "A database error occurred. Run migrations if this is a fresh install.",
+            str(request.url.path),
+        )
+
+    @app.exception_handler(Exception)
+    async def _unhandled(request: Request, exc: Exception) -> ORJSONResponse:
+        logger.exception("Unhandled error on %s", request.url.path)
+        return _problem(
+            500,
+            "Internal server error",
+            "An unexpected error occurred.",
+            str(request.url.path),
         )
