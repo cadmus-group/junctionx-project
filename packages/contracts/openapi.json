@@ -951,18 +951,21 @@
       },
       "LoginRequest": {
         "properties": {
-          "email": {
-            "format": "email",
-            "title": "Email",
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
             "type": "string"
           },
-          "password": {
-            "title": "Password",
+          "username": {
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
             "type": "string"
           }
         },
         "required": [
-          "email",
+          "username",
           "password"
         ],
         "title": "LoginRequest",
@@ -1817,10 +1820,6 @@
       },
       "UserInfo": {
         "properties": {
-          "email": {
-            "title": "Email",
-            "type": "string"
-          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -1832,11 +1831,15 @@
           "role": {
             "title": "Role",
             "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "email",
+          "username",
           "name",
           "role"
         ],
@@ -2212,7 +2215,6 @@
     },
     "/api/v1/auth/login": {
       "post": {
-        "description": "Demo authentication. Any credentials succeed in demo mode and mint a JWT.",
         "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {

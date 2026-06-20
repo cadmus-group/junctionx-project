@@ -30,7 +30,7 @@ export type AssetType =
   | "meter";
 
 export interface AuthLoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -38,7 +38,7 @@ export interface AuthLoginResponse {
   access_token: string;
   token_type: "bearer";
   expires_in: number;
-  user: { id: string; email: string; name: string; role: string };
+  user: { id: string; username: string; name: string; role: string };
 }
 
 export interface Quantity {
