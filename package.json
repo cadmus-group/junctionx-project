@@ -2,7 +2,7 @@
   "name": "gridtrace",
   "version": "0.1.0",
   "private": true,
-  "description": "GridTrace — Find where energy disappears, explain why, and prioritize what to inspect.",
+  "description": "Atlas — Find where energy disappears, explain why, and prioritize what to inspect.",
   "packageManager": "pnpm@10.15.1",
   "engines": {
     "node": ">=20",

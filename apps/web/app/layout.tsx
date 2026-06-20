@@ -4,9 +4,13 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GridTrace",
+  title: "Atlas",
   description:
     "Find where energy disappears, explain why, and prioritize what to inspect.",
+  icons: {
+    icon: "/logo_icon.png",
+    apple: "/logo_icon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

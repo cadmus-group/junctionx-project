@@ -1,8 +1,8 @@
-# GridTrace
+# Atlas
 
 > Find where energy disappears, explain why, and prioritize what to inspect.
 
-GridTrace detects **probable non-technical electricity losses** (theft, meter
+Atlas detects **probable non-technical electricity losses** (theft, meter
 tampering, faults) using consumption analytics, machine learning, grid energy
 reconciliation, GIS clustering, explainability, and inspection prioritization.
 
@@ -10,7 +10,7 @@ This is a **hackathon MVP**: a Turborepo monorepo with a modular-monolith FastAP
 backend, a background worker, an ML lab, and a Next.js operator console. It runs
 fully offline with deterministic synthetic data.
 
-> ⚠️ **Ethics:** GridTrace produces *operational signals to prioritize inspection*,
+> ⚠️ **Ethics:** Atlas produces *operational signals to prioritize inspection*,
 > never accusations. All data here is **synthetic**. Confirmation always requires a
 > human field inspection. The frontend never computes the authoritative risk score.
 

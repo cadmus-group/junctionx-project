@@ -20,8 +20,8 @@ import {
   Map as MapIcon,
   Settings,
   Users,
-  Zap,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -84,10 +84,8 @@ function Sidebar() {
   return (
     <aside className={cn("flex w-56 shrink-0 flex-col border-r", RAIL)}>
       <div className="flex h-[52px] items-center gap-2.5 border-b border-[#2D2D2A] px-4">
-        <div className="flex h-6 w-6 items-center justify-center rounded-sm border border-white/30">
-          <Zap className="h-3.5 w-3.5" />
-        </div>
-        <span className="text-sm font-semibold tracking-tight">GridTrace</span>
+        <Image src="/logo_icon.png" alt="" width={24} height={24} className="h-6 w-6 shrink-0" />
+        <span className="text-sm font-semibold tracking-tight">Atlas</span>
       </div>
       <nav className="flex-1 space-y-0.5 p-2">
         {items.map((item) => {
@@ -158,7 +156,7 @@ function Topbar({ title }: { title?: string }) {
   return (
     <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-border bg-background px-6">
       <div className="flex items-center gap-2">
-        <h1 className="text-sm font-semibold tracking-tight">{title ?? "GridTrace"}</h1>
+        <h1 className="text-sm font-semibold tracking-tight">{title ?? "Atlas"}</h1>
       </div>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <ProfileMenu />
