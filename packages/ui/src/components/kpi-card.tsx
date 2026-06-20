@@ -4,11 +4,24 @@ import { cn } from "../lib/cn";
 import { Card, CardContent } from "./card";
 import { MetricDelta } from "./metric-delta";
 
+/** Semantic accent for a KPI: positive/good, negative/bad, caution, or info. */
+export type KpiTone = "positive" | "negative" | "warning" | "info" | "neutral";
+
+const TONE_ICON: Record<KpiTone, string> = {
+  positive: "text-success",
+  negative: "text-danger",
+  warning: "text-warning",
+  info: "text-info",
+  neutral: "text-muted-foreground",
+};
+
 export interface KpiCardProps {
   label: string;
   value: ReactNode;
   unit?: string;
   icon?: LucideIcon;
+  /** Color accent conveying whether the metric is good/bad/caution. */
+  tone?: KpiTone;
   delta?: number;
   deltaInvert?: boolean;
   deltaFormatted?: string;
@@ -21,6 +34,7 @@ export function KpiCard({
   value,
   unit,
   icon: Icon,
+  tone = "neutral",
   delta,
   deltaInvert,
   deltaFormatted,
@@ -34,7 +48,7 @@ export function KpiCard({
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {label}
           </span>
-          {Icon ? <Icon className="h-4 w-4 text-muted-foreground" /> : null}
+          {Icon ? <Icon className={cn("h-4 w-4", TONE_ICON[tone])} /> : null}
         </div>
         <div className="mt-2 flex items-baseline gap-1.5">
           <span className="text-2xl font-semibold tabular-nums text-foreground">{value}</span>

@@ -16,6 +16,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ClipboardList, Euro, Zap } from "lucide-react";
 import Link from "next/link";
+import { useMemo } from "react";
 import { useApi } from "@/lib/client";
 import { useGlobalFilters } from "@/lib/use-filters";
 import { CardSkeletonGrid } from "@/components/loading";
@@ -32,6 +33,15 @@ export function CommandCenter() {
   const trendQuery = useQuery(api.dashboard.lossTrend(params));
   const topRiskQuery = useQuery(api.customers.list({ min_risk: 70, page: 1, page_size: 6 }));
 
+  // Most-recent period-over-period change in unexplained loss (real, from the trend).
+  const lossDelta = useMemo(() => {
+    const pts = trendQuery.data?.points;
+    if (!pts || pts.length < 2) return undefined;
+    const last = pts[pts.length - 1]?.unexplained_loss_kwh ?? 0;
+    const prev = pts[pts.length - 2]?.unexplained_loss_kwh ?? 0;
+    return prev > 0 ? (last - prev) / prev : undefined;
+  }, [trendQuery.data]);
+
   return (
     <div className="flex flex-col">
       <PageHeader
@@ -42,7 +52,7 @@ export function CommandCenter() {
         <FilterBar showTier={false} />
 
         <QueryBoundary query={summaryQuery} loading={<CardSkeletonGrid />}>
-          {(summary) => <KpiRow summary={summary} />}
+          {(summary) => <KpiRow summary={summary} lossDelta={lossDelta} />}
         </QueryBoundary>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -97,34 +107,57 @@ export function CommandCenter() {
   );
 }
 
-function KpiRow({ summary }: { summary: DashboardSummary }) {
+function KpiRow({ summary, lossDelta }: { summary: DashboardSummary; lossDelta?: number }) {
   const currency = summary.currency as Currency;
+  const flagged = summary.high_risk_count + summary.critical_risk_count;
+  const flaggedPct =
+    summary.total_customers > 0 ? (flagged / summary.total_customers) * 100 : 0;
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         label="Unexplained loss"
         value={formatEnergyKwh(summary.total_unexplained_loss_kwh)}
         icon={Zap}
+        tone="negative"
+        delta={lossDelta}
+        deltaInvert
         hint={`${formatNumber(summary.total_transformers)} transformers`}
       />
       <KpiCard
         label="Estimated loss value"
         value={formatCurrency(summary.total_estimated_loss_value, currency)}
         icon={Euro}
-        hint="Current period"
+        tone="negative"
+        delta={lossDelta}
+        deltaInvert
+        hint="vs previous period"
       />
-      <KpiCard
-        label="High / critical"
-        value={`${summary.high_risk_count} / ${summary.critical_risk_count}`}
-        icon={AlertTriangle}
-        hint="Customers needing review"
-      />
-      <KpiCard
-        label="Open inspections"
-        value={formatNumber(summary.open_inspections)}
-        icon={ClipboardList}
-        hint={`Model ${summary.model_version}`}
-      />
+      <Link
+        href="/inspections/flagged"
+        className="block h-full rounded-[4px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <KpiCard
+          label="Flagged for review"
+          value={formatNumber(flagged)}
+          icon={AlertTriangle}
+          tone="warning"
+          hint={`${summary.critical_risk_count} critical · ${flaggedPct.toFixed(1)}% of ${formatNumber(summary.total_customers)} scored`}
+          className="h-full transition-colors hover:border-foreground/40"
+        />
+      </Link>
+      <Link
+        href="/inspections"
+        className="block h-full rounded-[4px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <KpiCard
+          label="Open inspections"
+          value={formatNumber(summary.open_inspections)}
+          icon={ClipboardList}
+          tone="info"
+          hint={`Model ${summary.model_version}`}
+          className="h-full transition-colors hover:border-foreground/40"
+        />
+      </Link>
     </div>
   );
 }
