@@ -25,24 +25,36 @@ PaginationDep = Annotated[PaginationParams, Depends(get_pagination)]
 
 
 class CurrentUser:
-    def __init__(self, user_id: str, email: str, role: str):
-        self.user_id = user_id
-        self.email = email
+    def __init__(self, id: str, username: str, name: str, role: str):
+        self.id = id
+        self.username = username
+        self.name = name
         self.role = role
+
+    @property
+    def user_id(self) -> str:
+        """Backward-compatible alias used by older handlers."""
+        return self.id
+
+    @property
+    def email(self) -> str:
+        """Backward-compatible alias for inspection actor fields."""
+        return self.username
 
 
 async def get_current_user(
     settings: SettingsDep,
     authorization: Annotated[str | None, Header()] = None,
 ) -> CurrentUser:
-    """Resolve the authenticated user from a bearer token.
-
-    In demo mode an absent token resolves to a demo operator so the showcase
-    flow works without a login step.
-    """
+    """Resolve the authenticated user from a bearer token."""
     if not authorization or not authorization.lower().startswith("bearer "):
         if settings.demo_mode:
-            return CurrentUser("demo-user", "demo@gridtrace.local", "operator")
+            return CurrentUser(
+                id="demo-user",
+                username="demo_operator",
+                name="Demo Operator",
+                role="operator",
+            )
         raise UnauthorizedError("Missing bearer token")
 
     token = authorization.split(" ", 1)[1]
@@ -50,9 +62,15 @@ async def get_current_user(
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
     except JWTError as exc:
         raise UnauthorizedError("Invalid token") from exc
+
+    username = payload.get("username")
+    if not username:
+        raise UnauthorizedError("Invalid token")
+
     return CurrentUser(
-        user_id=payload.get("sub", "unknown"),
-        email=payload.get("email", "unknown"),
+        id=payload.get("sub", "unknown"),
+        username=username,
+        name=payload.get("name", username),
         role=payload.get("role", "operator"),
     )
 

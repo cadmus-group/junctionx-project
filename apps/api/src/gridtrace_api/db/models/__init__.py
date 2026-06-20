@@ -20,6 +20,7 @@ from gridtrace_api.db.models.risk import (
     ModelRegistry,
     RiskScore,
 )
+from gridtrace_api.db.models.user import User
 
 __all__ = [
     "Alert",
@@ -37,4 +38,5 @@ __all__ = [
     "Region",
     "RiskScore",
     "TechnicalLossEstimate",
+    "User",
 ]
