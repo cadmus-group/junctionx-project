@@ -6,7 +6,6 @@ import {
   Boxes,
   ClipboardList,
   Database,
-  Gauge,
   LayoutDashboard,
   type LucideIcon,
   Map as MapIcon,
@@ -75,19 +74,6 @@ function Sidebar() {
           );
         })}
       </nav>
-      <div className="space-y-2 border-t border-[#2D2D2A] p-3 text-[11px] text-white/55">
-        <div className="flex items-center justify-between">
-          <span className="font-semibold uppercase tracking-wide">Region</span>
-          <span className="tabular-nums text-white/80">Netherlands · EUR</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#3C8D63]" aria-hidden />
-          <span className="flex items-center gap-1.5">
-            <Gauge className="h-3.5 w-3.5" />
-            Demo environment
-          </span>
-        </div>
-      </div>
     </aside>
   );
 }
