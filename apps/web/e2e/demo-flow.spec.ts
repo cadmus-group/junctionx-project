@@ -18,10 +18,17 @@ test.beforeAll(async ({ request }) => {
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
-    ([key, token]) => {
-      window.localStorage.setItem(key, token);
+    ([tokenKey, token, userKey, user]) => {
+      window.localStorage.setItem(tokenKey, token);
+      // Satisfy the auth gate (RequireAuth reads the stored user + role).
+      window.localStorage.setItem(userKey, user);
     },
-    [TOKEN_STORAGE_KEY, accessToken] as const
+    [
+      TOKEN_STORAGE_KEY,
+      accessToken,
+      "gridtrace.user",
+      JSON.stringify({ id: "demo-operator", name: "Grid Operations Lead", role: "operator" }),
+    ] as const
   );
 });
 

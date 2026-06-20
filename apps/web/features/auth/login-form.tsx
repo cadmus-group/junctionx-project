@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { AuthLoginResponse } from "@gridtrace/contracts";
 import {
   Button,
   Card,
@@ -12,11 +13,13 @@ import {
   Label,
 } from "@gridtrace/ui";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Zap } from "lucide-react";
-import { setToken, useApi } from "@/lib/client";
+import { useAuth } from "@/lib/auth";
+import { useApi } from "@/lib/client";
+import { ROLE_HOME, resolveRole } from "@/lib/roles";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -28,7 +31,13 @@ type LoginValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const router = useRouter();
   const { client } = useApi();
+  const { login, user, ready } = useAuth();
   const [error, setError] = useState<string | null>(null);
+
+  // Already signed in? Skip the login screen, landing on the role's home.
+  useEffect(() => {
+    if (ready && user) router.replace(ROLE_HOME[user.role]);
+  }, [ready, user, router]);
 
   const {
     register,
@@ -42,12 +51,13 @@ export function LoginForm() {
   const onSubmit = handleSubmit(async (values) => {
     setError(null);
     try {
-      const res = await client.request<{ access_token: string }>("api/v1/auth/login", {
+      const res = await client.request<AuthLoginResponse>("api/v1/auth/login", {
         method: "POST",
         body: values,
       });
-      setToken(res.access_token);
-      router.push("/");
+      const role = resolveRole(res.user.role);
+      login({ id: res.user.id, name: res.user.name, role }, res.access_token);
+      router.replace(ROLE_HOME[role]);
     } catch {
       setError("Sign-in failed. Check your credentials and try again.");
     }
@@ -91,7 +101,7 @@ export function LoginForm() {
               {isSubmitting ? "Signing in…" : "Sign in"}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Demo: demo_operator / SuperSecret123!
+              Demo: operator · analyst · inspector (password 8+ chars)
             </p>
           </form>
         </CardContent>
