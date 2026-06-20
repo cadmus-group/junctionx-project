@@ -109,6 +109,21 @@ make install && make up && make migrate && make seed && make dev
 **Offline demo mode:** set `NEXT_PUBLIC_DEMO_MODE=true` and the web app serves
 itself from in-browser mocks + cached GeoJSON — no backend or database required.
 
+### User roles (demo login)
+
+The console has three role-based views — the "Përdoruesit Kryesorë" from the brief.
+On the login screen **any password with 8+ characters** works; the **username selects
+the role**:
+
+| Username | Role | View |
+|----------|------|------|
+| `operator`  | **Distribution Operator** | Oversight: Command Center KPIs, Risk Map, Inspections (+ Settings) |
+| `analyst`   | **Analyst Team** | Triage: Customers, Assets, Model Analytics, Data Quality, Inspections |
+| `inspector` | **Field Inspector** | Field work: Risk Map + assigned Inspections |
+
+Every role shares the same shell (top bar, main content, the map); only the sidebar
+navigation differs.
+
 ## Environment variables
 
 See [`.env.example`](./.env.example). Public browser values are prefixed
