@@ -43,6 +43,14 @@ from gridtrace_api.db.models import (
     Operator,
     Region,
     TechnicalLossEstimate,
+    User,
+)
+from gridtrace_api.modules.auth.constants import (
+    DEMO_OPERATOR_ID,
+    DEMO_OPERATOR_NAME,
+    DEMO_OPERATOR_PASSWORD_HASH,
+    DEMO_OPERATOR_ROLE,
+    DEMO_OPERATOR_USERNAME,
 )
 from shapely.geometry import Point
 from sqlalchemy import insert
@@ -402,6 +410,18 @@ def persist_dataset(session: Session, dataset: DemoDataset) -> dict:
     """
     operator = Operator(id=str(uuid.uuid4()), **dataset.operator)
     session.add(operator)
+    session.flush()
+
+    session.merge(
+        User(
+            id=DEMO_OPERATOR_ID,
+            username=DEMO_OPERATOR_USERNAME,
+            name=DEMO_OPERATOR_NAME,
+            role=DEMO_OPERATOR_ROLE,
+            password_hash=DEMO_OPERATOR_PASSWORD_HASH,
+            operator_id=operator.id,
+        )
+    )
     session.flush()
 
     region_ids: dict[str, str] = {}

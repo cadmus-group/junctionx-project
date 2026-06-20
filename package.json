@@ -21,7 +21,12 @@
     "generate:contracts": "bash scripts/generate-contracts.sh",
     "db:migrate": "bash scripts/db-migrate.sh",
     "db:seed": "bash scripts/db-seed.sh",
-    "demo:reset": "bash scripts/demo-reset.sh"
+    "demo:reset": "bash scripts/demo-reset.sh",
+    "docker:up": "bash scripts/docker-up.sh",
+    "docker:down": "bash scripts/docker-down.sh",
+    "docker:seed": "bash scripts/docker-seed.sh",
+    "docker:logs": "bash scripts/docker-logs.sh",
+    "docker:build": "docker compose build"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

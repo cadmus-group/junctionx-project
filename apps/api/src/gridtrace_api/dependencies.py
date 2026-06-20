@@ -10,6 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gridtrace_api.config import Settings, get_settings
 from gridtrace_api.db.session import get_session
+from gridtrace_api.modules.auth.constants import (
+    DEMO_OPERATOR_ID,
+    DEMO_OPERATOR_ROLE,
+    DEMO_OPERATOR_USERNAME,
+)
 from gridtrace_api.shared.errors import UnauthorizedError
 from gridtrace_api.shared.schemas import PaginationParams
 
@@ -25,9 +30,9 @@ PaginationDep = Annotated[PaginationParams, Depends(get_pagination)]
 
 
 class CurrentUser:
-    def __init__(self, user_id: str, email: str, role: str):
+    def __init__(self, user_id: str, username: str, role: str):
         self.user_id = user_id
-        self.email = email
+        self.username = username
         self.role = role
 
 
@@ -37,22 +42,26 @@ async def get_current_user(
 ) -> CurrentUser:
     """Resolve the authenticated user from a bearer token.
 
-    In demo mode an absent token resolves to a demo operator so the showcase
-    flow works without a login step.
+    When ``demo_mode`` is enabled, missing auth resolves to the demo operator so
+    showcase flows work without a login step. Opt in via ``NEXT_PUBLIC_DEMO_MODE=true``.
     """
     if not authorization or not authorization.lower().startswith("bearer "):
         if settings.demo_mode:
-            return CurrentUser("demo-user", "demo@gridtrace.local", "operator")
+            return CurrentUser(
+                DEMO_OPERATOR_ID, DEMO_OPERATOR_USERNAME, DEMO_OPERATOR_ROLE
+            )
         raise UnauthorizedError("Missing bearer token")
 
     token = authorization.split(" ", 1)[1]
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        )
     except JWTError as exc:
         raise UnauthorizedError("Invalid token") from exc
     return CurrentUser(
         user_id=payload.get("sub", "unknown"),
-        email=payload.get("email", "unknown"),
+        username=payload.get("username", "unknown"),
         role=payload.get("role", "operator"),
     )
 

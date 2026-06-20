@@ -7,19 +7,22 @@ ENV UV_COMPILE_BYTECODE=1 \
 
 WORKDIR /app
 
-# Copy workspace manifests first for better layer caching.
-COPY pyproject.toml uv.lock* ./
+COPY pyproject.toml uv.lock ./
 COPY packages/domain-py/pyproject.toml packages/domain-py/pyproject.toml
 COPY apps/api/pyproject.toml apps/api/pyproject.toml
 COPY apps/worker/pyproject.toml apps/worker/pyproject.toml
 COPY apps/ml-lab/pyproject.toml apps/ml-lab/pyproject.toml
 
-RUN uv sync --package gridtrace-api --no-install-project --no-dev || true
+RUN uv sync --package gridtrace-api --no-install-project --no-dev
 
 COPY packages/domain-py packages/domain-py
 COPY apps/api apps/api
 
 RUN uv sync --package gridtrace-api --no-dev
 
+COPY infra/docker/entrypoint-api.sh /entrypoint-api.sh
+COPY infra/docker/entrypoint-migrate.sh /entrypoint-migrate.sh
+RUN chmod +x /entrypoint-api.sh /entrypoint-migrate.sh
+
 EXPOSE 8000
-CMD ["uv", "run", "--package", "gridtrace-api", "uvicorn", "gridtrace_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["/entrypoint-api.sh"]

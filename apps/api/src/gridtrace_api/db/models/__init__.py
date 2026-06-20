@@ -14,6 +14,7 @@ from gridtrace_api.db.models.inspections import (
     InspectionOutcome,
 )
 from gridtrace_api.db.models.organization import Operator, Region
+from gridtrace_api.db.models.user import User
 from gridtrace_api.db.models.risk import (
     Alert,
     FeatureSnapshot,
@@ -37,4 +38,5 @@ __all__ = [
     "Region",
     "RiskScore",
     "TechnicalLossEstimate",
+    "User",
 ]

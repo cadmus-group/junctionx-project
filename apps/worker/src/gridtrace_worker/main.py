@@ -11,7 +11,7 @@ Commands:
     poll-ned          Poll NED macro baseline -> ned_grid_status.parquet
     sync-olap         Export meter readings + DuckDB feature analytics to Parquet
     enrich-amsterdam  Apply Woningwaarde + Zonatlas context to customers
-    ingest-dutch-energy  Assign Liander zipcodes + street baselines to customers
+    ingest-dutch-energy  Assign Stedin/Liander zipcodes + street baselines to customers
     generate-synthetic  Generate + persist the deterministic synthetic dataset
     build-features    Build feature_snapshots from readings
     score-entities    Score customers + transformers and publish atomically
@@ -52,15 +52,24 @@ def _seed_value(args: argparse.Namespace) -> int:
 
 
 def _run_seed_pipeline(seed: int) -> dict:
-    """generate-synthetic -> enrich -> sync OLAP -> build-features -> score-entities."""
+    """generate-synthetic -> dutch-energy -> enrich -> sync OLAP -> build-features -> score."""
+    dutch: dict | None = None
     with session_scope() as session:
         gen = generate_synthetic.run(session, seed)
+        try:
+            dutch = ingest_dutch_energy.run(session, seed)
+        except FileNotFoundError as exc:
+            log_event(logger, "dutch_energy_skipped", reason=str(exc))
+            dutch = {"skipped": str(exc)}
         enrich_amsterdam_context.run(session, seed)
         poll_ned.run(session, seed)
         sync_olap.run(session, seed)
         feat = build_features.run(session, seed)
         scored = score_entities.run(session, seed)
-    return {"generate": gen.get("showcase"), "features": feat, "scoring": scored}
+    summary = {"generate": gen.get("showcase"), "features": feat, "scoring": scored}
+    if dutch is not None:
+        summary["dutch_energy"] = dutch
+    return summary
 
 
 def cmd_generate(args: argparse.Namespace) -> int:
@@ -124,7 +133,10 @@ def cmd_enrich_amsterdam(args: argparse.Namespace) -> int:
 def cmd_ingest_dutch_energy(args: argparse.Namespace) -> int:
     with session_scope() as session:
         result = ingest_dutch_energy.run(
-            session, _seed_value(args), csv_path=args.csv_path
+            session,
+            _seed_value(args),
+            csv_path=args.csv_path,
+            source=args.source,
         )
     print(json.dumps(result, indent=2, default=str))
     return 0
@@ -240,7 +252,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--csv-path",
         type=str,
         default=None,
-        help="Path to liander_electricity_01012020.csv (ingest-dutch-energy)",
+        help="Path to a CSV file or directory (ingest-dutch-energy)",
+    )
+    parser.add_argument(
+        "--source",
+        type=str,
+        choices=("auto", "stedin", "liander"),
+        default=None,
+        help="Dutch energy dataset source (default: DUTCH_ENERGY_SOURCE or auto-detect)",
     )
     return parser
 

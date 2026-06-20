@@ -1,0 +1,43 @@
+# Git & IDE
+.git
+.gitignore
+.cursor
+.vscode
+**/.DS_Store
+
+# Dependencies & caches
+node_modules
+**/.next
+**/.turbo
+.venv
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.cache
+
+# Local env & secrets
+.env
+.env.local
+.env.*.local
+
+# Large / generated data (mounted as volumes at runtime)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/synthetic
+
+# Kaggle cache
+.kaggle
+
+# Test & coverage artifacts
+coverage
+**/playwright-report
+**/test-results
+
+# Docs & misc
+**/*.md
+!README.md
+agent-transcripts

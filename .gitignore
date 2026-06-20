@@ -45,3 +45,23 @@ data/processed/*
 .idea/
 .vscode/*
 !.vscode/extensions.json
+.cursor/
+
+# Alternate lockfile (project uses pnpm)
+bun.lockb
+
+# Local Kaggle cache
+.kaggle/
+
+# Agent session transcripts (local only)
+agent-transcripts/
+
+# Synthetic data output
+data/synthetic/
+
+# Local docker overrides
+docker-compose.override.yml
+
+# Dataset drops at repo root (normalize via scripts/setup-stedin-data.sh)
+/Stedin kleinverbruikgegevens*.csv
+/*liander*.csv

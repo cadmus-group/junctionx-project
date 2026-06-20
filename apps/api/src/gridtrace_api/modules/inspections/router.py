@@ -44,7 +44,7 @@ async def list_missions(session: SessionDep, _user: CurrentUserDep) -> Page[Insp
 async def create_mission(
     body: CreateMissionRequest, session: SessionDep, user: CurrentUserDep
 ) -> InspectionMissionOut:
-    return await service.create_mission(session, body, user.email)
+    return await service.create_mission(session, body, user.username)
 
 
 @router.post("/missions/{mission_id}/cases", response_model=InspectionCaseOut, status_code=201)
@@ -65,7 +65,7 @@ async def update_case(
 async def submit_outcome(
     case_id: str, body: SubmitOutcomeRequest, session: SessionDep, user: CurrentUserDep
 ) -> InspectionOutcomeOut:
-    return await service.submit_outcome(session, case_id, body, user.email)
+    return await service.submit_outcome(session, case_id, body, user.username)
 
 
 @router.post("/route", response_model=RouteResponse)

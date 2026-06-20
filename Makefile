@@ -13,15 +13,24 @@ install: ## Install JS (pnpm) and Python (pip + .venv)
 dev: ## Run web + api in dev mode
 	pnpm dev
 
-up: ## Start docker compose services (postgres, api, worker)
+up: ## Start full Docker stack (postgres, migrate, api, worker, web, ml-lab)
+	bash scripts/docker-up.sh
+
+up-db: ## Start PostgreSQL/PostGIS only (local dev without containers for app code)
 	docker compose up -d postgres
 	@echo "Postgres is starting. Run 'make migrate' once it is healthy."
 
-down: ## Stop docker compose services
-	docker compose down
+down: ## Stop all Docker Compose services
+	bash scripts/docker-down.sh
 
-logs: ## Tail docker compose logs
-	docker compose logs -f
+logs: ## Tail Docker Compose logs
+	bash scripts/docker-logs.sh
+
+docker-seed: ## Seed demo data inside the worker container
+	bash scripts/docker-seed.sh
+
+docker-build: ## Build all Docker images without starting
+	docker compose build
 
 migrate: ## Apply database migrations
 	pnpm db:migrate

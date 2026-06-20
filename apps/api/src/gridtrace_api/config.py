@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Self
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+INSECURE_JWT_SECRET = "dev-only-insecure-change-me"
 
 
 class Settings(BaseSettings):
@@ -29,7 +32,8 @@ class Settings(BaseSettings):
     redis_url: str | None = Field(default=None, alias="REDIS_URL")
 
     # Security
-    jwt_secret: str = Field(default="dev-only-insecure-change-me", alias="JWT_SECRET")
+    app_env: str = Field(default="development", alias="APP_ENV")
+    jwt_secret: str = Field(default=INSECURE_JWT_SECRET, alias="JWT_SECRET")
     jwt_algorithm: str = "HS256"
     jwt_expire_seconds: int = 60 * 60 * 8
 
@@ -38,7 +42,7 @@ class Settings(BaseSettings):
     api_port: int = Field(default=8000, alias="API_PORT")
 
     # Demo / artifacts
-    demo_mode: bool = Field(default=True, alias="NEXT_PUBLIC_DEMO_MODE")
+    demo_mode: bool = Field(default=False, alias="NEXT_PUBLIC_DEMO_MODE")
     demo_seed: int = Field(default=42, alias="DEMO_SEED")
     model_artifact_path: str = Field(
         default="./apps/ml-lab/artifacts", alias="MODEL_ARTIFACT_PATH"
@@ -57,6 +61,7 @@ class Settings(BaseSettings):
     ned_api_key: str | None = Field(default=None, alias="NATIONAAL_ENERGIE_DASHBOARD_API_KEY")
     data_raw_path: str = Field(default="./data/raw", alias="DATA_RAW_PATH")
     data_processed_path: str = Field(default="./data/processed", alias="DATA_PROCESSED_PATH")
+    dutch_energy_source: str = Field(default="auto", alias="DUTCH_ENERGY_SOURCE")
 
     # CORS — allow any localhost port in dev (Next.js may bind 3001+ when 3000 is taken)
     cors_origins: list[str] = Field(
@@ -76,6 +81,14 @@ class Settings(BaseSettings):
     @property
     def is_sqlite(self) -> bool:
         return self.async_database_url.startswith("sqlite")
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> Self:
+        if self.app_env not in ("development", "test") and self.jwt_secret == INSECURE_JWT_SECRET:
+            raise ValueError(
+                "JWT_SECRET must be set to a strong value when APP_ENV is not development or test"
+            )
+        return self
 
 
 @lru_cache

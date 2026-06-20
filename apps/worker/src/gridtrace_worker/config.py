@@ -27,6 +27,7 @@ class WorkerConfig:
     ned_api_key: str | None
     data_raw_path: str
     data_processed_path: str
+    dutch_energy_source: str
     default_currency: str = "EUR"
     energy_price_eur_per_kwh: float = 0.25
 
@@ -61,4 +62,5 @@ def get_worker_config() -> WorkerConfig:
         ned_api_key=settings.ned_api_key,
         data_raw_path=settings.data_raw_path,
         data_processed_path=settings.data_processed_path,
+        dutch_energy_source=settings.dutch_energy_source,
     )

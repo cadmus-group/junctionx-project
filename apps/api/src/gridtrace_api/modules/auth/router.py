@@ -7,24 +7,28 @@ from jose import jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, Field, field_validator
 
-from gridtrace_api.dependencies import SettingsDep
+from gridtrace_api.config import Settings
+from gridtrace_api.dependencies import CurrentUserDep, SessionDep, SettingsDep
+from gridtrace_api.modules.auth.constants import (
+    DEMO_OPERATOR_ID,
+    DEMO_OPERATOR_NAME,
+    DEMO_OPERATOR_ROLE,
+    DEMO_OPERATOR_USERNAME,
+)
+from gridtrace_api.modules.auth.repository import get_user_by_id, get_user_by_username
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# Setup password hashing context (using bcrypt)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class LoginRequest(BaseModel):
-    # Username with basic length constraints
     username: str = Field(..., min_length=3, max_length=50)
-    # Enforce minimum security constraints on the password
     password: str = Field(..., min_length=8, max_length=128)
 
     @field_validator("username", mode="before")
     @classmethod
     def sanitize_username(cls, value: str) -> str:
-        """Sanitizes the username by stripping whitespace and converting to lowercase."""
         if isinstance(value, str):
             return value.strip().lower()
         return value
@@ -44,60 +48,35 @@ class LoginResponse(BaseModel):
     user: UserInfo
 
 
-# --- Mock Database Fetch Helper ---
-def get_user_from_db(username: str):
-    """
-    Simulated database lookup.
-    In production, replace this with an actual query to your database.
-    """
-    # Demo credentials: password is "SuperSecret123!" hashed using bcrypt
-    demo_hashed_password = (
-        "$2b$12$vOEvU2EqIBTZhRkXrTJ6dOy9zhJZaEh0Rf94CNjKWFNE33iNxP2mC"
-    )
-
-    if username == "demo_operator":
-        return {
-            "id": "user-12345",
-            "username": "demo_operator",
-            "name": "Demo Operator",
-            "role": "operator",
-            "hashed_password": demo_hashed_password,
-        }
-    return None
-
-
-@router.post("/login", response_model=LoginResponse)
-async def login(body: LoginRequest, settings: SettingsDep) -> LoginResponse:
-    # 1. Look up user (Sanitized username is used here)
-    db_user = get_user_from_db(body.username)
-
-    # 2. Authentication check & password verification
-    invalid_credentials_exception = HTTPException(
+def _invalid_credentials() -> HTTPException:
+    return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Incorrect username or password",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    if not db_user:
-        raise invalid_credentials_exception
 
-    # Verify the incoming plain text password against the stored hash
-    is_password_correct = pwd_context.verify(body.password, db_user["hashed_password"])
-    if not is_password_correct:
-        raise invalid_credentials_exception
-
-    # 3. Formulate response user data
-    user = UserInfo(
-        id=db_user["id"],
-        username=db_user["username"],
-        name=db_user["name"],
-        role=db_user["role"],
+def _user_info(user) -> UserInfo:
+    return UserInfo(
+        id=user.id,
+        username=user.username,
+        name=user.name,
+        role=user.role,
     )
 
-    # 4. Generate JWT
+
+def _demo_user_info() -> UserInfo:
+    return UserInfo(
+        id=DEMO_OPERATOR_ID,
+        username=DEMO_OPERATOR_USERNAME,
+        name=DEMO_OPERATOR_NAME,
+        role=DEMO_OPERATOR_ROLE,
+    )
+
+
+def _encode_token(user: UserInfo, settings: Settings) -> tuple[str, int]:
     now = datetime.now(UTC)
     expire = now + timedelta(seconds=settings.jwt_expire_seconds)
-
     token = jwt.encode(
         {
             "sub": user.id,
@@ -109,7 +88,28 @@ async def login(body: LoginRequest, settings: SettingsDep) -> LoginResponse:
         settings.jwt_secret,
         algorithm=settings.jwt_algorithm,
     )
+    return token, settings.jwt_expire_seconds
 
-    return LoginResponse(
-        access_token=token, expires_in=settings.jwt_expire_seconds, user=user
-    )
+
+@router.post("/login", response_model=LoginResponse)
+async def login(
+    body: LoginRequest, session: SessionDep, settings: SettingsDep
+) -> LoginResponse:
+    db_user = await get_user_by_username(session, body.username)
+    if not db_user or not pwd_context.verify(body.password, db_user.password_hash):
+        raise _invalid_credentials()
+
+    user = _user_info(db_user)
+    token, expires_in = _encode_token(user, settings)
+    return LoginResponse(access_token=token, expires_in=expires_in, user=user)
+
+
+@router.get("/me", response_model=UserInfo)
+async def me(session: SessionDep, current_user: CurrentUserDep) -> UserInfo:
+    if current_user.user_id == DEMO_OPERATOR_ID:
+        return _demo_user_info()
+
+    db_user = await get_user_by_id(session, current_user.user_id)
+    if db_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return _user_info(db_user)
