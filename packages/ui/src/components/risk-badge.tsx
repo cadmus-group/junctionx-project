@@ -2,11 +2,11 @@ import type { RiskTier } from "@gridtrace/contracts";
 import { cn } from "../lib/cn";
 
 const TIER_STYLES: Record<RiskTier, string> = {
-  LOW: "bg-risk-low/15 text-risk-low border-risk-low/30",
-  WATCH: "bg-risk-watch/15 text-risk-watch border-risk-watch/30",
-  MEDIUM: "bg-risk-medium/15 text-risk-medium border-risk-medium/30",
-  HIGH: "bg-risk-high/15 text-risk-high border-risk-high/30",
-  CRITICAL: "bg-risk-critical/15 text-risk-critical border-risk-critical/30",
+  LOW: "bg-risk-low/10 text-risk-low border-risk-low/35",
+  WATCH: "bg-risk-watch/10 text-risk-watch border-risk-watch/35",
+  MEDIUM: "bg-risk-medium/10 text-risk-medium border-risk-medium/35",
+  HIGH: "bg-risk-high/10 text-risk-high border-risk-high/35",
+  CRITICAL: "bg-risk-critical/12 text-risk-critical border-risk-critical/40",
 };
 
 const TIER_LABELS: Record<RiskTier, string> = {
@@ -28,7 +28,7 @@ export function RiskBadge({ tier, score, className, showScore = true }: RiskBadg
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+        "inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[11px] font-semibold",
         TIER_STYLES[tier],
         className
       )}

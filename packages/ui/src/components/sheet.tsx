@@ -24,14 +24,14 @@ const SheetOverlay = forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-surface-elevated p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out",
+  "fixed z-50 gap-4 bg-surface p-6 transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out",
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b border-border",
-        bottom: "inset-x-0 bottom-0 border-t border-border",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r border-border sm:max-w-sm",
-        right: "inset-y-0 right-0 h-full w-3/4 border-l border-border sm:max-w-md",
+        top: "inset-x-0 top-0 border-b border-border-strong",
+        bottom: "inset-x-0 bottom-0 border-t border-border-strong",
+        left: "inset-y-0 left-0 h-full w-3/4 border-r border-border-strong sm:max-w-sm",
+        right: "inset-y-0 right-0 h-full w-3/4 border-l border-border-strong sm:max-w-md",
       },
     },
     defaultVariants: { side: "right" },

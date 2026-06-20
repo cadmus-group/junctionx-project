@@ -8,7 +8,15 @@ import type {
   Position,
   RiskTier,
 } from "@gridtrace/contracts";
-import { riskScoreRgba, riskTierRgba, ROUTE_RGBA, TRANSFORMER_RGBA, type RGBAColor } from "../style";
+import {
+  NEUTRAL_OUTLINE_RGBA,
+  riskScoreRgba,
+  riskTierRgba,
+  ROUTE_RGBA,
+  SELECTED_RGBA,
+  TRANSFORMER_RGBA,
+  type RGBAColor,
+} from "../style";
 
 export interface RiskPointProperties {
   entity_id: string;
@@ -72,8 +80,8 @@ export function createCustomerRiskLayer(
       return (4 + (score / 100) * 10) * radiusScale;
     },
     getFillColor: (f) => riskScoreRgba(f.properties.risk_score),
-    getLineColor: (f) =>
-      f.properties.entity_id === selectedId ? [255, 255, 255, 255] : [10, 14, 20, 120],
+    getLineColor: (f): RGBAColor =>
+      f.properties.entity_id === selectedId ? SELECTED_RGBA : NEUTRAL_OUTLINE_RGBA,
     getLineWidth: (f) => (f.properties.entity_id === selectedId ? 3 : 1),
     onClick: pickHandler(onSelect),
     onHover: (info: PickingInfo) => {
@@ -112,8 +120,8 @@ export function createTransformerLayer(
     getRadius: 10,
     getFillColor: (f): RGBAColor =>
       f.properties.risk_tier ? riskTierRgba(f.properties.risk_tier) : TRANSFORMER_RGBA,
-    getLineColor: (f) =>
-      f.properties.entity_id === selectedId ? [255, 255, 255, 255] : [8, 12, 18, 200],
+    getLineColor: (f): RGBAColor =>
+      f.properties.entity_id === selectedId ? SELECTED_RGBA : NEUTRAL_OUTLINE_RGBA,
     getLineWidth: (f) => (f.properties.entity_id === selectedId ? 4 : 2),
     onClick: pickHandler(onSelect),
     onHover: (info: PickingInfo) => {
@@ -159,7 +167,7 @@ export function createH3RiskLayer(
     stroked: true,
     getFillColor: (f: { properties?: Record<string, unknown> | null }) =>
       riskScoreRgba(riskAccessor(f.properties ?? {}), 150),
-    getLineColor: [255, 255, 255, 40],
+    getLineColor: [128, 128, 124, 70],
     getLineWidth: 1,
     lineWidthMinPixels: 1,
   });

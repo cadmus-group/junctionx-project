@@ -32,11 +32,11 @@ export function ErrorState({
     <div
       role="alert"
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-lg border border-danger/30 bg-danger/5 px-6 py-12 text-center",
+        "flex flex-col items-center justify-center gap-3 rounded-[4px] border border-danger/30 bg-danger/5 px-6 py-12 text-center",
         className
       )}
     >
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger/15 text-danger">
+      <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-danger/30 bg-danger/10 text-danger">
         <AlertTriangle className="h-5 w-5" />
       </div>
       <div className="space-y-1">

@@ -6,15 +6,22 @@ import type { RiskTier } from "@gridtrace/contracts";
  * Apps may override by passing a `palette` to option generators.
  */
 export interface ChartPalette {
+  /** Chrome — monochrome. */
   foreground: string;
   muted: string;
   border: string;
   grid: string;
+  /** Primary analytical line — strong neutral foreground (monochrome). */
   primary: string;
+  /** Semantic data colors. */
   info: string;
   success: string;
   warning: string;
   danger: string;
+  comparison: string;
+  forecast: string;
+  neutral1: string;
+  neutral2: string;
   riskLow: string;
   riskWatch: string;
   riskMedium: string;
@@ -22,21 +29,31 @@ export interface ChartPalette {
   riskCritical: string;
 }
 
+/**
+ * ECharts renders to canvas and cannot read CSS custom properties. This palette
+ * mirrors the dark-theme monochrome chrome plus the constant semantic data
+ * colors from `@gridtrace/config`. Chart chrome stays monochrome; series colors
+ * carry meaning. Apps may pass a `palette` to override per theme.
+ */
 export const DEFAULT_PALETTE: ChartPalette = {
-  foreground: "#e6edf3",
-  muted: "#8b98a5",
-  border: "#2a3441",
-  grid: "#1f2730",
-  primary: "#3b82f6",
-  info: "#38bdf8",
-  success: "#22c55e",
-  warning: "#f59e0b",
-  danger: "#ef4444",
-  riskLow: "#22c55e",
-  riskWatch: "#84cc16",
-  riskMedium: "#f59e0b",
-  riskHigh: "#f97316",
-  riskCritical: "#ef4444",
+  foreground: "#F5F5F2",
+  muted: "#A5A5A0",
+  border: "#2D2D2A",
+  grid: "#262624",
+  primary: "#F5F5F2",
+  info: "#2E67C7",
+  success: "#3C8D63",
+  warning: "#B88923",
+  danger: "#C73A35",
+  comparison: "#4B6F9E",
+  forecast: "#7C5AA6",
+  neutral1: "#6F6F6A",
+  neutral2: "#A7A79F",
+  riskLow: "#4B8B67",
+  riskWatch: "#B08D33",
+  riskMedium: "#D8752B",
+  riskHigh: "#D13F32",
+  riskCritical: "#A51515",
 };
 
 export function riskTierColor(tier: RiskTier, palette: ChartPalette = DEFAULT_PALETTE): string {

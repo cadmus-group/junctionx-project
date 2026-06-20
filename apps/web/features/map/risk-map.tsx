@@ -8,6 +8,7 @@ import {
   fitBoundsToGeometry,
   GridTraceMap,
   MapLegend,
+  resolveMapStyle,
   type RiskPointCollection,
   type RiskPointFeature,
 } from "@gridtrace/maps";
@@ -145,7 +146,7 @@ export function RiskMap() {
       <div className="relative flex-1">
         <Card className="absolute inset-3 z-0 overflow-hidden p-0">
           <GridTraceMap
-            styleUrl={NEXT_PUBLIC_MAP_STYLE_URL}
+            styleUrl={resolveMapStyle(NEXT_PUBLIC_MAP_STYLE_URL, "dark")}
             layers={layers}
             fitBounds={bounds}
             className="relative h-full w-full"

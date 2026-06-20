@@ -7,11 +7,16 @@ export {
 } from "./geometry";
 export {
   mapStyleConfiguration,
+  monochromeMapStyle,
+  resolveMapStyle,
   riskTierRgba,
   riskScoreRgba,
   RISK_TIER_RGBA,
   TRANSFORMER_RGBA,
+  SELECTED_RGBA,
   ROUTE_RGBA,
+  NEUTRAL_OUTLINE_RGBA,
+  DEMO_TILES_STYLE_URL,
   type MapStyleConfiguration,
   type RGBAColor,
 } from "./style";

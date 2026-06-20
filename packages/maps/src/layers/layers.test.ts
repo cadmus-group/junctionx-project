@@ -30,7 +30,7 @@ describe("risk color mapping", () => {
     expect(low[1]).toBeGreaterThan(low[0]);
   });
 
-  it("falls back to a neutral color when tier is null", () => {
-    expect(riskTierRgba(null)).toEqual([139, 152, 165, 160]);
+  it("falls back to a neutral monochrome color when tier is null", () => {
+    expect(riskTierRgba(null)).toEqual([111, 111, 106, 230]);
   });
 });

@@ -40,17 +40,21 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+// The navigation rail is a fixed near-black monochrome surface in both themes:
+// black with white text in light mode, near-black in dark mode.
+const RAIL = "bg-[#0A0A0A] dark:bg-[#0D0D0D] text-[#F5F5F2] border-[#2D2D2A]";
+
 function Sidebar() {
   const pathname = usePathname();
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-surface">
-      <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <Zap className="h-4 w-4" />
+    <aside className={cn("flex w-56 shrink-0 flex-col border-r", RAIL)}>
+      <div className="flex h-[52px] items-center gap-2.5 border-b border-[#2D2D2A] px-4">
+        <div className="flex h-6 w-6 items-center justify-center rounded-sm border border-white/30">
+          <Zap className="h-3.5 w-3.5" />
         </div>
         <span className="text-sm font-semibold tracking-tight">GridTrace</span>
       </div>
-      <nav className="flex-1 space-y-1 p-2">
+      <nav className="flex-1 space-y-0.5 p-2">
         {NAV.map((item) => {
           const active = isActive(pathname, item.href);
           return (
@@ -58,10 +62,10 @@ function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-sm px-3 py-2 text-[13px] font-medium transition-colors",
                 active
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-white text-[#0A0A0A]"
+                  : "text-white/60 hover:bg-white/10 hover:text-white"
               )}
               aria-current={active ? "page" : undefined}
             >
@@ -71,10 +75,17 @@ function Sidebar() {
           );
         })}
       </nav>
-      <div className="border-t border-border p-3 text-xs text-muted-foreground">
+      <div className="space-y-2 border-t border-[#2D2D2A] p-3 text-[11px] text-white/55">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold uppercase tracking-wide">Region</span>
+          <span className="tabular-nums text-white/80">Netherlands · EUR</span>
+        </div>
         <div className="flex items-center gap-2">
-          <Gauge className="h-3.5 w-3.5" />
-          Demo environment
+          <span className="h-1.5 w-1.5 rounded-full bg-[#3C8D63]" aria-hidden />
+          <span className="flex items-center gap-1.5">
+            <Gauge className="h-3.5 w-3.5" />
+            Demo environment
+          </span>
         </div>
       </div>
     </aside>
@@ -83,13 +94,16 @@ function Sidebar() {
 
 function Topbar({ title }: { title?: string }) {
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
-      <div>
-        <h1 className="text-sm font-semibold">{title ?? "GridTrace"}</h1>
+    <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-border bg-background px-6">
+      <div className="flex items-center gap-2">
+        <h1 className="text-sm font-semibold tracking-tight">{title ?? "GridTrace"}</h1>
       </div>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="rounded-full border border-border px-2 py-0.5">Netherlands · EUR</span>
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-foreground">
+        <span className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2 py-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#3C8D63]" aria-hidden />
+          System nominal
+        </span>
+        <div className="flex h-7 w-7 items-center justify-center rounded-sm border border-border bg-surface text-[11px] font-semibold text-foreground">
           DO
         </div>
       </div>

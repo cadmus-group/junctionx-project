@@ -1,7 +1,7 @@
 "use client";
 
 import type { RiskTier } from "@gridtrace/contracts";
-import { RISK_TIER_RGBA } from "../style";
+import { RISK_TIER_RGBA, SELECTED_RGBA, TRANSFORMER_RGBA } from "../style";
 
 const TIER_ORDER: RiskTier[] = ["LOW", "WATCH", "MEDIUM", "HIGH", "CRITICAL"];
 const TIER_LABEL: Record<RiskTier, string> = {
@@ -31,24 +31,36 @@ export function MapLegend({
     <div
       className={
         className ??
-        "pointer-events-none absolute bottom-4 left-4 z-10 rounded-md border border-border bg-surface-elevated/90 p-3 text-xs text-foreground shadow-md backdrop-blur"
+        "pointer-events-none absolute bottom-4 left-4 z-10 rounded-sm border border-border bg-surface p-3 text-xs text-foreground"
       }
     >
-      <p className="mb-2 font-medium">{title}</p>
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </p>
       <div className="flex flex-col gap-1">
         {TIER_ORDER.map((tier) => (
           <div key={tier} className="flex items-center gap-2">
             <span
-              className="h-3 w-3 rounded-full"
+              className="h-2.5 w-2.5 rounded-[1px]"
               style={{ backgroundColor: rgba(RISK_TIER_RGBA[tier]) }}
             />
             <span className="text-muted-foreground">{TIER_LABEL[tier]}</span>
           </div>
         ))}
+        <div className="mt-1 flex items-center gap-2 border-t border-border pt-1">
+          <span
+            className="h-2.5 w-2.5 rounded-[1px] ring-2 ring-offset-1 ring-offset-surface"
+            style={{ backgroundColor: "transparent", boxShadow: `0 0 0 2px ${rgba(SELECTED_RGBA)}` }}
+          />
+          <span className="text-muted-foreground">Selected</span>
+        </div>
         {showTransformers ? (
-          <div className="mt-1 flex items-center gap-2 border-t border-border pt-1">
-            <span className="h-3 w-3 rounded-full ring-2 ring-white/70" style={{ backgroundColor: "rgba(56,189,248,0.9)" }} />
-            <span className="text-muted-foreground">Transformer</span>
+          <div className="flex items-center gap-2">
+            <span
+              className="h-2.5 w-2.5 rounded-[1px]"
+              style={{ backgroundColor: rgba(TRANSFORMER_RGBA) }}
+            />
+            <span className="text-muted-foreground">Transformer (no tier)</span>
           </div>
         ) : null}
       </div>

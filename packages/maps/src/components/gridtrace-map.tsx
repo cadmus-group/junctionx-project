@@ -3,12 +3,13 @@
 import type { Layer } from "@deck.gl/core";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { MAP_DEFAULTS } from "@gridtrace/config";
-import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
+import maplibregl, { type Map as MapLibreMap, type StyleSpecification } from "maplibre-gl";
 import { useEffect, useRef, type ReactNode } from "react";
 import type { Bounds } from "../geometry";
 
 export interface GridTraceMapProps {
-  styleUrl: string;
+  /** A style URL or an inline MapLibre style specification. */
+  styleUrl: string | StyleSpecification;
   layers: Layer[];
   center?: [number, number];
   zoom?: number;
