@@ -19,8 +19,9 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
+import { DatePicker } from "@/components/date-picker";
 import { useApi } from "@/lib/client";
 
 const schema = z.object({
@@ -38,6 +39,7 @@ export function CreateMissionForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -94,7 +96,18 @@ export function CreateMissionForm() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="scheduled_date">Scheduled date</Label>
-              <Input id="scheduled_date" type="date" {...register("scheduled_date")} />
+              <Controller
+                control={control}
+                name="scheduled_date"
+                render={({ field }) => (
+                  <DatePicker
+                    id="scheduled_date"
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select a date"
+                  />
+                )}
+              />
             </div>
           </div>
           <DialogFooter>

@@ -49,15 +49,29 @@ let outcomeSeq = 100;
 export const handlers = [
   http.post(`${V1}/auth/login`, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as { username?: string };
+    // Demo mode: any 8+ char password works; the username selects the persona/role.
+    const username = body.username ?? "demo_operator";
+    const identifier = username.toLowerCase();
+    const role: "operator" | "analyst" | "inspector" =
+      identifier.includes("operator") || identifier.includes("admin")
+        ? "operator"
+        : identifier.includes("inspector") || identifier.includes("field")
+          ? "inspector"
+          : "analyst";
+    const nameByRole: Record<"operator" | "analyst" | "inspector", string> = {
+      operator: "Grid Operations Lead",
+      analyst: "Risk Analyst",
+      inspector: "Field Inspector",
+    };
     const response = {
       access_token: "demo-token",
       token_type: "bearer" as const,
       expires_in: 3600,
       user: {
-        id: "demo-operator",
-        username: body.username ?? "demo_operator",
-        name: "Demo Operator",
-        role: "operator",
+        id: `demo-${role}`,
+        username,
+        name: nameByRole[role],
+        role,
       },
     };
     return HttpResponse.json(response);

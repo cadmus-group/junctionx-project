@@ -417,7 +417,7 @@ export function buildDashboardSummary(data: DemoDataset = dataset): DashboardSum
     }
   }
   return {
-    total_customers: 1000,
+    total_customers: data.customers.length,
     total_transformers: data.transformers.length,
     total_unexplained_loss_kwh: round(unexplained, 0),
     total_estimated_loss_value: round(lossValue, 0),
