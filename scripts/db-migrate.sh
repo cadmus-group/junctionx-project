@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Apply database migrations to head.
 set -euo pipefail
-cd "$(dirname "$0")/../apps/api"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT/apps/api"
 PY="$("$ROOT/scripts/py.sh")"
 
 if [ "$PY" = "python3" ] && [ ! -x "$ROOT/.venv/bin/python" ]; then

@@ -19,12 +19,13 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column("customers", sa.Column("woningwaarde_category", sa.String(), nullable=True))
-    op.add_column(
-        "customers",
-        sa.Column("solar_potential_flag", sa.Boolean(), server_default=sa.false(), nullable=False),
+    op.execute(
+        "ALTER TABLE customers ADD COLUMN IF NOT EXISTS woningwaarde_category VARCHAR"
     )
-    op.alter_column("customers", "solar_potential_flag", server_default=None)
+    op.execute(
+        "ALTER TABLE customers ADD COLUMN IF NOT EXISTS solar_potential_flag BOOLEAN "
+        "DEFAULT FALSE NOT NULL"
+    )
 
 
 def downgrade() -> None:

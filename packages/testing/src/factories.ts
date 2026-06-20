@@ -58,6 +58,8 @@ export function customerFactory(options: CustomerFactoryOptions = {}): Customer 
     customer_type: customerType,
     tariff_type: TARIFF_TYPES[Math.floor(rng() * TARIFF_TYPES.length)]!,
     building_type: BUILDING_TYPES[Math.floor(rng() * BUILDING_TYPES.length)]!,
+    baseline_annual_kwh: round(1200 + rng() * 2800, 0),
+    street_smartmeter_perc: round(35 + rng() * 65, 1),
     geometry,
     risk_score: options.riskScore === null ? null : score,
     risk_tier: options.riskScore === null ? null : riskTierForScore(score),

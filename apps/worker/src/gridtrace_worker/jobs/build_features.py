@@ -36,6 +36,20 @@ from gridtrace_worker.olap.duckdb_pipeline import parquet_paths
 
 logger = get_logger("build_features")
 
+HOURS_PER_YEAR = 8760
+
+
+def _baseline_deviation_ratio(
+    recent_mean_kwh: float, baseline_annual_kwh: float | None
+) -> float | None:
+    if baseline_annual_kwh is None or baseline_annual_kwh <= 0:
+        return None
+    recent_annualized_kwh = recent_mean_kwh * HOURS_PER_YEAR
+    return round(
+        (recent_annualized_kwh - baseline_annual_kwh) / baseline_annual_kwh,
+        6,
+    )
+
 
 def _load_olap_feature_map() -> dict[str, dict]:
     cfg = get_worker_config()
@@ -165,6 +179,15 @@ def run(session: Session, seed: int | None = None) -> dict:
             olap = olap_features.get(c.id)
             if olap:
                 feats.update(olap)
+            baseline = (
+                float(c.baseline_annual_kwh) if c.baseline_annual_kwh is not None else None
+            )
+            if baseline is not None:
+                feats["baseline_annual_kwh"] = round(baseline, 4)
+            deviation = _baseline_deviation_ratio(feats["recent_mean_kwh"], baseline)
+            if deviation is not None:
+                feats["recent_annualized_kwh"] = round(feats["recent_mean_kwh"] * HOURS_PER_YEAR, 4)
+                feats["baseline_deviation_ratio"] = deviation
             snapshot_rows.append(
                 {
                     "id": str(uuid.uuid4()),

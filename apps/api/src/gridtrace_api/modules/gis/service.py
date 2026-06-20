@@ -3,12 +3,77 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
-from geoalchemy2.functions import ST_MakeEnvelope
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gridtrace_api.db.models import Customer, RiskScore
-from gridtrace_api.shared.geo import feature, feature_collection, geometry_to_geojson
+from gridtrace_api.shared.geo import feature, feature_collection
+
+
+_HIGH_RISK_METERS_SQL = """
+SELECT jsonb_build_object(
+    'type', 'FeatureCollection',
+    'features', COALESCE(
+        jsonb_agg(
+            jsonb_build_object(
+                'type', 'Feature',
+                'id', c.id,
+                'geometry', ST_AsGeoJSON(c.geometry)::jsonb,
+                'properties', jsonb_build_object(
+                    'customer_id', c.id,
+                    'external_ref', c.external_ref,
+                    'risk_score', rs.risk_score,
+                    'risk_tier', rs.risk_tier,
+                    'estimated_loss_kwh', rs.estimated_loss_kwh,
+                    'transformer_id', c.transformer_id,
+                    'baseline_annual_kwh', c.baseline_annual_kwh,
+                    'street_smartmeter_perc', c.street_smartmeter_perc
+                )
+            )
+            ORDER BY rs.risk_score DESC
+        ) FILTER (WHERE c.id IS NOT NULL),
+        '[]'::jsonb
+    )
+) AS geojson
+FROM customers c
+INNER JOIN risk_scores rs
+    ON rs.entity_id = c.id
+   AND rs.entity_type = 'customer'
+   AND rs.is_current IS TRUE
+WHERE rs.risk_score >= :min_risk
+  AND c.geometry IS NOT NULL
+  {bbox_clause}
+"""
+
+
+async def get_high_risk_meters(
+    session: AsyncSession,
+    bbox: tuple[float, float, float, float] | None,
+    min_risk: float = 0.0,
+) -> dict[str, Any]:
+    """Customer-level risk points as GeoJSON via PostGIS native aggregation."""
+    params: dict[str, Any] = {"min_risk": min_risk}
+    if bbox is not None:
+        params.update(
+            {
+                "min_lon": bbox[0],
+                "min_lat": bbox[1],
+                "max_lon": bbox[2],
+                "max_lat": bbox[3],
+            }
+        )
+        bbox_clause = (
+            "AND ST_Intersects("
+            "c.geometry, ST_MakeEnvelope(:min_lon, :min_lat, :max_lon, :max_lat, 4326)"
+            ")"
+        )
+    else:
+        bbox_clause = ""
+
+    stmt = text(_HIGH_RISK_METERS_SQL.format(bbox_clause=bbox_clause))
+    result = await session.execute(stmt, params)
+    geojson = result.scalar_one()
+    return geojson if isinstance(geojson, dict) else dict(geojson)
 
 
 async def anomalies_geojson(
@@ -17,41 +82,7 @@ async def anomalies_geojson(
     min_risk: float = 0.0,
 ) -> dict[str, Any]:
     """Customer-level risk points as a GeoJSON FeatureCollection."""
-    stmt = (
-        select(Customer, RiskScore)
-        .join(
-            RiskScore,
-            (RiskScore.entity_id == Customer.id)
-            & (RiskScore.entity_type == "customer")
-            & (RiskScore.is_current.is_(True)),
-        )
-        .where(RiskScore.risk_score >= min_risk)
-    )
-    if bbox is not None:
-        envelope = ST_MakeEnvelope(bbox[0], bbox[1], bbox[2], bbox[3], 4326)
-        stmt = stmt.where(func.ST_Intersects(Customer.geometry, envelope))
-
-    rows = (await session.execute(stmt)).all()
-    features = []
-    for customer, risk in rows:
-        geom = geometry_to_geojson(customer.geometry)
-        if geom is None:
-            continue
-        features.append(
-            feature(
-                geom,
-                {
-                    "customer_id": customer.id,
-                    "external_ref": customer.external_ref,
-                    "risk_score": risk.risk_score,
-                    "risk_tier": risk.risk_tier,
-                    "estimated_loss_kwh": risk.estimated_loss_kwh,
-                    "transformer_id": customer.transformer_id,
-                },
-                fid=customer.id,
-            )
-        )
-    return feature_collection(features)
+    return await get_high_risk_meters(session, bbox, min_risk)
 
 
 async def hotspots(

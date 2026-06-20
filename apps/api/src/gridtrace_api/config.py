@@ -58,8 +58,20 @@ class Settings(BaseSettings):
     data_raw_path: str = Field(default="./data/raw", alias="DATA_RAW_PATH")
     data_processed_path: str = Field(default="./data/processed", alias="DATA_PROCESSED_PATH")
 
-    # CORS
-    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    # CORS — allow any localhost port in dev (Next.js may bind 3001+ when 3000 is taken)
+    cors_origins: list[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3001",
+        ],
+        alias="CORS_ORIGINS",
+    )
+    cors_origin_regex: str | None = Field(
+        default=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+        alias="CORS_ORIGIN_REGEX",
+    )
 
     @property
     def is_sqlite(self) -> bool:

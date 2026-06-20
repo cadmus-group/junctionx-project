@@ -17,6 +17,7 @@ export const globalFiltersSchema = z.object({
   from: z.string().optional(),
   to: z.string().optional(),
   selected: z.string().optional(),
+  selectedType: z.enum(["customer", "transformer"]).optional(),
 });
 export type GlobalFilters = z.infer<typeof globalFiltersSchema>;
 

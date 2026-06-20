@@ -6,22 +6,31 @@ import { getPublicEnv } from "./env";
 /**
  * In demo mode we start the MSW browser worker so the whole app runs with no
  * backend. Rendering of API-driven content is gated until the worker is ready.
+ * When demo mode is off, any previously registered MSW worker is stopped so real
+ * API responses are not intercepted by stale mock handlers.
  */
 export function DemoModeGate({ children }: { children: ReactNode }) {
   const { NEXT_PUBLIC_DEMO_MODE } = getPublicEnv();
   const [ready, setReady] = useState(!NEXT_PUBLIC_DEMO_MODE);
 
   useEffect(() => {
-    if (!NEXT_PUBLIC_DEMO_MODE) return;
-    let cancelled = false;
+    if (NEXT_PUBLIC_DEMO_MODE) {
+      let cancelled = false;
+      void (async () => {
+        const { startMsw } = await import("@gridtrace/testing/browser");
+        await startMsw();
+        if (!cancelled) setReady(true);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
+
     void (async () => {
-      const { startMsw } = await import("@gridtrace/testing/browser");
-      await startMsw();
-      if (!cancelled) setReady(true);
+      const { stopMsw } = await import("@gridtrace/testing/browser");
+      await stopMsw();
+      setReady(true);
     })();
-    return () => {
-      cancelled = true;
-    };
   }, [NEXT_PUBLIC_DEMO_MODE]);
 
   if (!ready) {

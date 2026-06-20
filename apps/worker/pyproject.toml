@@ -9,9 +9,10 @@ dependencies = [
     "geoalchemy2>=0.16",
     "shapely>=2.0",
     "polars>=1.0",
+    "pyarrow>=15.0",
     "duckdb>=1.0",
     "httpx>=0.27.0",
-    "numpy",
+    "numpy>=2.0",
     "pandas",
     "apscheduler>=3.10",
     "gridtrace-domain",
@@ -21,8 +22,8 @@ dependencies = [
 [project.optional-dependencies]
 ml = [
     "torch>=2.2",
-    "momentfm>=0.1",
-    "duckdb>=1.0",
+    "momentfm @ git+https://github.com/moment-timeseries-foundation-model/moment.git",
+    "numpy>=2.0",
 ]
 dev = [
     "pytest>=8.3.0",
@@ -34,8 +35,8 @@ dev = [
 ]
 ml = [
     "torch>=2.2",
-    "momentfm>=0.1",
-    "duckdb>=1.0",
+    "momentfm @ git+https://github.com/moment-timeseries-foundation-model/moment.git",
+    "numpy>=2.0",
 ]
 
 [tool.uv.sources]

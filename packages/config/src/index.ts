@@ -8,7 +8,7 @@ export * from "./design-tokens";
  */
 
 export const publicEnvSchema = z.object({
-  NEXT_PUBLIC_API_BASE_URL: z.string().url().default("http://localhost:8000"),
+  NEXT_PUBLIC_API_BASE_URL: z.string().url().default("http://localhost:8003"),
   NEXT_PUBLIC_MAP_STYLE_URL: z
     .string()
     .url()
@@ -16,7 +16,7 @@ export const publicEnvSchema = z.object({
   NEXT_PUBLIC_DEMO_MODE: z
     .string()
     .optional()
-    .default("true")
+    .default("false")
     .transform((v) => v === "true" || v === "1"),
 });
 
@@ -56,7 +56,7 @@ export const MAP_DEFAULTS = {
 } as const;
 
 export const DEMO_FLAGS = {
-  defaultDemoMode: true,
+  defaultDemoMode: false,
   cachedGeoJsonPath: "/demo",
 } as const;
 

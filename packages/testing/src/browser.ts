@@ -23,3 +23,20 @@ export async function startMsw(options: StartMswOptions = {}): Promise<void> {
     quiet: options.quiet ?? true,
   });
 }
+
+/** Stop MSW and unregister the service worker when leaving demo mode. */
+export async function stopMsw(): Promise<void> {
+  if (typeof window === "undefined") return;
+  if (worker) {
+    worker.stop();
+    worker = null;
+  }
+  if ("serviceWorker" in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(
+      registrations
+        .filter((r) => r.active?.scriptURL.includes("mockServiceWorker"))
+        .map((r) => r.unregister())
+    );
+  }
+}

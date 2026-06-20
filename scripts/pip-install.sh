@@ -2,8 +2,14 @@
 # Install Python workspace packages into .venv using pip (editable installs).
 #
 # Usage:
-#   ./scripts/pip-install.sh          # base packages + dev tools
-#   INSTALL_ML=1 ./scripts/pip-install.sh   # also install MOMENT extras (torch, momentfm, duckdb)
+#   ./scripts/pip-install.sh
+#       Fast path: domain + api + worker + dev tools (~1–2 min)
+#
+#   INSTALL_ML=1 ./scripts/pip-install.sh
+#       Also install MOMENT extras: torch, momentfm, duckdb (~5–15 min download)
+#
+#   INSTALL_ML_LAB=1 ./scripts/pip-install.sh
+#       Also install apps/ml-lab (CatBoost/LightGBM/SHAP — slow, optional)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -40,21 +46,41 @@ fi
 # shellcheck source=/dev/null
 source "$VENV/bin/activate"
 
+PIP="python -m pip install --progress-bar on"
+
 echo "==> Upgrading pip"
-python -m pip install --upgrade pip
+python -m pip install --upgrade pip setuptools wheel
 
-echo "==> Installing workspace packages (editable)"
-python -m pip install -e packages/domain-py
-python -m pip install -e apps/api
-python -m pip install -e apps/worker
-python -m pip install -e apps/ml-lab
+echo "==> [1/4] gridtrace-domain"
+$PIP -e packages/domain-py
 
-echo "==> Installing dev tools"
-python -m pip install ruff mypy pytest pytest-asyncio
+echo "==> [2/4] gridtrace-api"
+$PIP -e apps/api
 
-if [ "${INSTALL_ML:-0}" = "1" ]; then
-  echo "==> Installing MOMENT ML extras (torch, momentfm, duckdb)"
-  python -m pip install -e "apps/worker[ml]"
+echo "==> [3/4] gridtrace-worker"
+$PIP -e apps/worker
+
+if [ "${INSTALL_ML_LAB:-0}" = "1" ]; then
+  echo "==> [optional] gridtrace-ml-lab (CatBoost/LightGBM — may take several minutes)"
+  $PIP -e apps/ml-lab
+else
+  echo "==> Skipping ml-lab (set INSTALL_ML_LAB=1 to include)"
 fi
 
-echo "==> Done. Activate with: source .venv/bin/activate"
+echo "==> [4/4] dev tools"
+$PIP ruff mypy pytest pytest-asyncio
+
+if [ "${INSTALL_ML:-0}" = "1" ]; then
+  echo "==> [MOMENT] Installing torch + momentfm (large download, please wait)"
+  "$(dirname "$0")/pip-install-ml.sh"
+fi
+
+echo ""
+echo "==> Done. Activate with:"
+echo "    source .venv/bin/activate"
+if [ "${INSTALL_ML:-0}" != "1" ]; then
+  echo ""
+  echo "For MOMENT scoring, run:"
+  echo "    INSTALL_ML=1 ./scripts/pip-install.sh"
+  echo "    # then set MOMENT_ENABLED=true in .env"
+fi

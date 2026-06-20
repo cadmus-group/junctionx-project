@@ -11,6 +11,7 @@ Commands:
     poll-ned          Poll NED macro baseline -> ned_grid_status.parquet
     sync-olap         Export meter readings + DuckDB feature analytics to Parquet
     enrich-amsterdam  Apply Woningwaarde + Zonatlas context to customers
+    ingest-dutch-energy  Assign Liander zipcodes + street baselines to customers
     generate-synthetic  Generate + persist the deterministic synthetic dataset
     build-features    Build feature_snapshots from readings
     score-entities    Score customers + transformers and publish atomically
@@ -33,6 +34,7 @@ from gridtrace_worker.jobs import (
     enrich_amsterdam_context,
     generate_synthetic,
     ingest_context,
+    ingest_dutch_energy,
     poll_ned,
     refresh_demo,
     score_entities,
@@ -115,6 +117,15 @@ def cmd_sync_olap(args: argparse.Namespace) -> int:
 def cmd_enrich_amsterdam(args: argparse.Namespace) -> int:
     with session_scope() as session:
         result = enrich_amsterdam_context.run(session, _seed_value(args))
+    print(json.dumps(result, indent=2, default=str))
+    return 0
+
+
+def cmd_ingest_dutch_energy(args: argparse.Namespace) -> int:
+    with session_scope() as session:
+        result = ingest_dutch_energy.run(
+            session, _seed_value(args), csv_path=args.csv_path
+        )
     print(json.dumps(result, indent=2, default=str))
     return 0
 
@@ -210,6 +221,7 @@ _COMMANDS = {
     "poll-ned": cmd_poll_ned,
     "sync-olap": cmd_sync_olap,
     "enrich-amsterdam": cmd_enrich_amsterdam,
+    "ingest-dutch-energy": cmd_ingest_dutch_energy,
     "generate-synthetic": cmd_generate,
     "build-features": cmd_build_features,
     "score-entities": cmd_score,
@@ -224,6 +236,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("command", choices=sorted(_COMMANDS), help="Subcommand to run")
     parser.add_argument("--seed", type=int, default=None, help="Override DEMO_SEED")
     parser.add_argument("--root", type=str, default=None, help="Context fixtures root (ingest-context)")
+    parser.add_argument(
+        "--csv-path",
+        type=str,
+        default=None,
+        help="Path to liander_electricity_01012020.csv (ingest-dutch-energy)",
+    )
     return parser
 
 

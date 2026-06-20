@@ -84,7 +84,8 @@ pnpm dev
 For MOMENT TSFM scoring, install ML extras then enable in `.env`:
 
 ```bash
-INSTALL_ML=1 ./scripts/pip-install.sh
+./scripts/pip-install.sh              # base worker (fast)
+./scripts/pip-install-ml.sh           # MOMENT deps only (~2GB download)
 # set MOMENT_ENABLED=true in .env
 source .venv/bin/activate
 python -m gridtrace_worker.main score-moment
@@ -99,8 +100,11 @@ make install && make up && make migrate && make seed && make dev
 | Service | URL |
 |---------|-----|
 | Web     | http://localhost:3000 |
-| API     | http://localhost:8000 |
-| OpenAPI | http://localhost:8000/docs |
+| API     | http://localhost:8003 |
+| OpenAPI | http://localhost:8003/docs |
+
+> **Note:** Local development uses port **8003** for the API (instead of 8000) to avoid
+> conflicts with other services — especially Docker containers that commonly bind to 8000.
 
 **Offline demo mode:** set `NEXT_PUBLIC_DEMO_MODE=true` and the web app serves
 itself from in-browser mocks + cached GeoJSON — no backend or database required.

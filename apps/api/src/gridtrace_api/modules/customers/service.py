@@ -7,7 +7,7 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gridtrace_api.db.models import Customer, MeterReading
+from gridtrace_api.db.models import Customer, FeatureSnapshot, MeterReading
 from gridtrace_api.modules.customers import repository as repo
 from gridtrace_api.modules.customers.schemas import (
     CustomerOut,
@@ -15,11 +15,59 @@ from gridtrace_api.modules.customers.schemas import (
     CustomerRiskProfile,
     MeterReadingOut,
     PeerComparisonPoint,
+    SpatialContextOut,
 )
 from gridtrace_api.modules.risk.repository import current_risk_for
 from gridtrace_api.modules.risk.schemas import RiskScoreOut
 from gridtrace_api.shared.errors import NotFoundError
 from gridtrace_api.shared.geo import geometry_to_geojson
+
+# Spatial context from Dutch Energy ingest is surfaced on customer DTOs.
+HOURS_PER_YEAR = 8760
+
+
+def _spatial_context(customer: Customer, features: dict) -> SpatialContextOut:
+    baseline = (
+        float(customer.baseline_annual_kwh) if customer.baseline_annual_kwh is not None else None
+    )
+    smartmeter = (
+        float(customer.street_smartmeter_perc)
+        if customer.street_smartmeter_perc is not None
+        else None
+    )
+    recent_annualized = features.get("recent_annualized_kwh")
+    if recent_annualized is not None:
+        recent_annualized = float(recent_annualized)
+    elif features.get("recent_mean_kwh") is not None:
+        recent_annualized = float(features["recent_mean_kwh"]) * HOURS_PER_YEAR
+
+    deviation = features.get("baseline_deviation_ratio")
+    if deviation is not None:
+        deviation = float(deviation)
+    elif baseline and baseline > 0 and recent_annualized is not None:
+        deviation = (recent_annualized - baseline) / baseline
+
+    return SpatialContextOut(
+        baseline_annual_kwh=baseline,
+        street_smartmeter_perc=smartmeter,
+        recent_annualized_kwh=round(recent_annualized, 2) if recent_annualized is not None else None,
+        baseline_deviation_ratio=round(deviation, 4) if deviation is not None else None,
+    )
+
+
+async def _latest_customer_features(session: AsyncSession, customer_id: str) -> dict:
+    row = (
+        await session.execute(
+            select(FeatureSnapshot.features_json)
+            .where(
+                FeatureSnapshot.entity_type == "customer",
+                FeatureSnapshot.entity_id == customer_id,
+            )
+            .order_by(FeatureSnapshot.as_of.desc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    return row if isinstance(row, dict) else {}
 
 
 def customer_to_out(customer: Customer, risk_score: float | None, risk_tier: str | None) -> CustomerOut:
@@ -33,6 +81,14 @@ def customer_to_out(customer: Customer, risk_score: float | None, risk_tier: str
         customer_type=customer.customer_type,
         tariff_type=customer.tariff_type,
         building_type=customer.building_type,
+        baseline_annual_kwh=(
+            float(customer.baseline_annual_kwh) if customer.baseline_annual_kwh is not None else None
+        ),
+        street_smartmeter_perc=(
+            float(customer.street_smartmeter_perc)
+            if customer.street_smartmeter_perc is not None
+            else None
+        ),
         geometry=geometry_to_geojson(customer.geometry),
         risk_score=risk_score,
         risk_tier=risk_tier,
@@ -132,10 +188,18 @@ async def get_risk_profile(session: AsyncSession, customer_id: str) -> CustomerR
             "Alternative explanations (meter fault, vacancy, tariff change) should be ruled out first."
         )
 
+    features = await _latest_customer_features(session, customer_id)
+    spatial_context = _spatial_context(customer, features)
+    if spatial_context.baseline_annual_kwh is not None:
+        notes.append(
+            f"Street baseline (Dutch Energy): {spatial_context.baseline_annual_kwh:,.0f} kWh/yr."
+        )
+
     return CustomerRiskProfile(
         customer=customer_to_out(customer, risk.risk_score, risk.risk_tier),
         risk=RiskScoreOut.from_model(risk),
         peer_comparison=peer_comparison,
+        spatial_context=spatial_context,
         loss_attribution_share=_attribution_share(risk),
         notes=notes,
     )

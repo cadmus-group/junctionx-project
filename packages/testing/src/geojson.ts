@@ -10,6 +10,8 @@ type RiskPointProps = {
   risk_score: number | null;
   risk_tier: string | null;
   estimated_loss_kwh?: number | null;
+  baseline_annual_kwh?: number | null;
+  street_smartmeter_perc?: number | null;
 };
 
 export function customersGeoJson(
@@ -29,6 +31,8 @@ export function customersGeoJson(
         risk_score: c.risk_score,
         risk_tier: c.risk_tier,
         estimated_loss_kwh: data.riskScores.get(c.id)?.estimated_loss_kwh ?? null,
+        baseline_annual_kwh: c.baseline_annual_kwh,
+        street_smartmeter_perc: c.street_smartmeter_perc,
       },
     }));
   return { type: "FeatureCollection", features };

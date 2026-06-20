@@ -155,6 +155,17 @@
       },
       "CustomerOut": {
         "properties": {
+          "baseline_annual_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Annual Kwh"
+          },
           "building_type": {
             "anyOf": [
               {
@@ -237,6 +248,17 @@
               }
             ],
             "title": "Risk Tier"
+          },
+          "street_smartmeter_perc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Street Smartmeter Perc"
           },
           "tariff_type": {
             "anyOf": [
@@ -329,6 +351,16 @@
           },
           "risk": {
             "$ref": "#/components/schemas/RiskScoreOut"
+          },
+          "spatial_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpatialContextOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -1541,6 +1573,56 @@
           "total_distance_km"
         ],
         "title": "RouteResponse",
+        "type": "object"
+      },
+      "SpatialContextOut": {
+        "properties": {
+          "baseline_annual_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Annual Kwh"
+          },
+          "baseline_deviation_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Deviation Ratio"
+          },
+          "recent_annualized_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recent Annualized Kwh"
+          },
+          "street_smartmeter_perc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Street Smartmeter Perc"
+          }
+        },
+        "title": "SpatialContextOut",
         "type": "object"
       },
       "SubmitOutcomeRequest": {
