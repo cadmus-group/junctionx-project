@@ -1,0 +1,3 @@
+asset_external_id,timestamp,estimated_technical_loss_kwh,method,confidence
+TX-001,2026-01-01T00:00:00Z,0.63,loss_factor,0.8
+TX-001,2026-01-01T01:00:00Z,0.59,loss_factor,0.8

@@ -36,6 +36,10 @@ test-results/
 apps/ml-lab/artifacts/*
 !apps/ml-lab/artifacts/.gitkeep
 data/raw/*
+!data/raw/production/
+data/raw/production/*
+!data/raw/production/.gitkeep
+!data/raw/production/*.csv.example
 data/processed/*
 !data/**/.gitkeep
 

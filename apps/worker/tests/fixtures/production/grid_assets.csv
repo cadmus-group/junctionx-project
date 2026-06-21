@@ -1,0 +1,3 @@
+external_id,asset_type,name,operator_name,lon,lat,parent_external_id,voltage_level,capacity_kva
+FD-001,feeder,Feeder North,Demo Operator,4.9000,52.3700,,mv,
+TX-001,transformer,Transformer 001,Demo Operator,4.9041,52.3676,FD-001,lv,630

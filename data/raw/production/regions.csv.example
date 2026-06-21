@@ -1,0 +1,3 @@
+code,name,region_type,operator_name,parent_code
+AMS,Amsterdam,municipality,Demo Operator,
+AMS-N1,Amsterdam Neighborhood 1,neighborhood,Demo Operator,AMS

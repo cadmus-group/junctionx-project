@@ -21,6 +21,10 @@
     "generate:contracts": "bash scripts/generate-contracts.sh",
     "db:migrate": "bash scripts/db-migrate.sh",
     "db:seed": "bash scripts/db-seed.sh",
+    "db:ingest-production": "bash scripts/ingest-production.sh",
+    "db:export-production": "bash scripts/export-production-csv.sh",
+    "db:setup-production": "bash scripts/setup-production-csv.sh",
+    "db:ensure-demo-user": "bash scripts/ensure-demo-user.sh",
     "demo:reset": "bash scripts/demo-reset.sh"
   },
   "devDependencies": {
