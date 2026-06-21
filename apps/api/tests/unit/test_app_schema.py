@@ -7,6 +7,7 @@ REQUIRED_PATHS = {
     "/api/v1/auth/me",
     "/api/v1/dashboard/summary",
     "/api/v1/dashboard/loss-trend",
+    "/api/v1/dashboard/regions",
     "/api/v1/gis/anomalies/geojson",
     "/api/v1/gis/hotspots",
     "/api/v1/assets",

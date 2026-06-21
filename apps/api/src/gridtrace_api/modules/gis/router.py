@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from gridtrace_api.dependencies import CurrentUserDep, SessionDep
 from gridtrace_api.modules.gis import service
@@ -19,6 +19,7 @@ async def anomalies_geojson(
     max_lon: float | None = None,
     max_lat: float | None = None,
     min_risk: float = 0.0,
+    region_id: Annotated[str | None, Query(alias="regionId")] = None,
 ) -> dict[str, Any]:
     bbox: tuple[float, float, float, float] | None = None
     if (
@@ -28,7 +29,7 @@ async def anomalies_geojson(
         and max_lat is not None
     ):
         bbox = (min_lon, min_lat, max_lon, max_lat)
-    return await service.anomalies_geojson(session, bbox, min_risk)
+    return await service.anomalies_geojson(session, bbox, min_risk, region_id)
 
 
 @router.get("/hotspots")
@@ -37,5 +38,6 @@ async def hotspots(
     _user: CurrentUserDep,
     resolution: int = 3,
     min_risk: float = 0.0,
+    region_id: Annotated[str | None, Query(alias="regionId")] = None,
 ) -> dict[str, Any]:
-    return await service.hotspots(session, resolution, min_risk)
+    return await service.hotspots(session, resolution, min_risk, region_id)

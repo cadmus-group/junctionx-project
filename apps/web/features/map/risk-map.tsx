@@ -4,6 +4,7 @@ import type { FeatureCollection, Point } from "@gridtrace/contracts";
 import {
   createCustomerRiskLayer,
   createH3RiskLayer,
+  createRiskHeatmapLayer,
   createTransformerLayer,
   fitBoundsToGeometry,
   GridTraceMap,
@@ -50,7 +51,12 @@ export function RiskMap() {
   const { NEXT_PUBLIC_MAP_STYLE_URL } = getPublicEnv();
 
   const [threshold, setThreshold] = useState<number>(filters.minRisk ?? 0);
-  const [visible, setVisible] = useState({ customers: true, transformers: true, hotspots: true });
+  const [visible, setVisible] = useState({
+    customers: true,
+    transformers: true,
+    hotspots: false,
+    heatmap: true,
+  });
   const [hover, setHover] = useState<{ feature: RiskPointFeature; x: number; y: number } | null>(
     null
   );
@@ -109,6 +115,9 @@ export function RiskMap() {
 
   const layers = useMemo(() => {
     const result = [];
+    if (visible.heatmap) {
+      result.push(createRiskHeatmapLayer(customers, { id: "risk-heatmap" }));
+    }
     if (visible.hotspots) {
       result.push(createH3RiskLayer(hotspots, { id: "hotspots" }));
     }
@@ -182,6 +191,13 @@ export function RiskMap() {
                 onCheckedChange={(c) => setVisible((v) => ({ ...v, customers: !!c }))}
               >
                 Metering points
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visible.heatmap}
+                onSelect={(e) => e.preventDefault()}
+                onCheckedChange={(c) => setVisible((v) => ({ ...v, heatmap: !!c }))}
+              >
+                Risk heatmap
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>

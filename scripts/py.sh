@@ -7,6 +7,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 if [ -x "$ROOT/.venv/bin/python" ]; then
   echo "$ROOT/.venv/bin/python"
+elif [ -x "$ROOT/.venv/Scripts/python.exe" ]; then
+  echo "$ROOT/.venv/Scripts/python.exe"
 elif command -v python3 >/dev/null 2>&1; then
   echo "python3"
 else

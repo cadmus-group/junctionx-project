@@ -82,12 +82,14 @@ class Settings(BaseSettings):
 
     def ensure_safe_for_deploy(self) -> None:
         """Refuse to start in production-like environments with default secrets."""
-        if self.environment.lower() in {"production", "staging", "prod"}:
-            if self.jwt_secret in self._INSECURE_JWT_SECRETS:
-                raise RuntimeError(
-                    "JWT_SECRET must be set to a strong value when ENVIRONMENT is "
-                    f"{self.environment!r}"
-                )
+        if (
+            self.environment.lower() in {"production", "staging", "prod"}
+            and self.jwt_secret in self._INSECURE_JWT_SECRETS
+        ):
+            raise RuntimeError(
+                "JWT_SECRET must be set to a strong value when ENVIRONMENT is "
+                f"{self.environment!r}"
+            )
 
 
 @lru_cache

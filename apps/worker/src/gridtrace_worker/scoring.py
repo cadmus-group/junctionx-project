@@ -90,6 +90,47 @@ def customer_components(features: dict) -> ScoredEntity:
     return ScoredEntity(components, score, tier, confidence, suspicion_weight)
 
 
+def customer_components_from_ml(
+    features: dict,
+    supervised_probability: float,
+    anomaly_score: float,
+) -> ScoredEntity:
+    """Compose a customer score from trained-model outputs.
+
+    ``supervised_probability`` (theft/no-theft classifier) and ``anomaly_score``
+    (IsolationForest) come from :mod:`gridtrace_worker.ml.ntl_scorer`. Grid, peer,
+    and spatial components are normalized features (identical to the heuristic path),
+    and the composite 0-100 score + tier come from ``gridtrace_domain``.
+    """
+    flatline = float(features.get("flatline", 0.0))
+    peer_dev = features.get("peer_deviation", 0.0)
+    solar_flag = bool(features.get("solar_potential_flag", False))
+    daylight_drop = float(features.get("daylight_drop_index", 0.0))
+
+    supervised = _clamp01(supervised_probability)
+    # A flatlined meter is always a maximal anomaly (likely meter fault).
+    anomaly = max(_clamp01(anomaly_score), flatline)
+    if solar_flag and daylight_drop > 0.3:
+        anomaly *= 1.0 - SOLAR_FALSE_POSITIVE_DAMPING
+
+    grid = _clamp01(features.get("grid_unexplained_ratio", 0.0) / GRID_RATIO_REF)
+    peer = _clamp01(max(0.0, peer_dev) / PEER_DEV_REF)
+    spatial = _clamp01(features.get("spatial_neighborhood_risk", 0.0) / SPATIAL_REF)
+
+    components = RiskComponents(
+        supervised_probability=supervised,
+        anomaly_score=_clamp01(anomaly),
+        grid_imbalance_score=grid,
+        peer_score=peer,
+        spatial_score=spatial,
+    )
+    score = risk_score(components)
+    tier = risk_tier_for_score(score)
+    confidence = _clamp01(0.5 + 0.45 * supervised - 0.3 * flatline)
+    suspicion_weight = max(1e-6, components.supervised_probability)
+    return ScoredEntity(components, score, tier, confidence, suspicion_weight)
+
+
 def transformer_components(features: dict) -> ScoredEntity:
     ratio = features.get("unexplained_ratio", 0.0)
     frac_drop = features.get("frac_members_dropping", 0.0)

@@ -12,11 +12,18 @@ Commands:
     sync-olap         Export meter readings + DuckDB feature analytics to Parquet
     enrich-amsterdam  Apply Woningwaarde + Zonatlas context to customers
     ingest-dutch-energy  Assign Liander zipcodes + street baselines to customers
+    ingest-operators     Ingest operators.csv from data/raw/production/
+    ingest-grid          Ingest grid_assets.csv (also loads operators)
+    ingest-customers     Ingest customers.csv (also loads operators, regions, grid)
+    ingest-readings      Ingest meter_readings.csv (loads full master data first)
+    ingest-production    Full CSV ingest + enrich + features + score pipeline
+    export-production-csv  Write deterministic demo dataset to data/raw/production/
     generate-synthetic  Generate + persist the deterministic synthetic dataset
     build-features    Build feature_snapshots from readings
     score-entities    Score customers + transformers and publish atomically
     score-moment      Run MOMENT inference only (debug; prints summary JSON)
     build-hotspots    Aggregate current risk into neighborhood hotspots
+    ensure-demo-user  Restore demo_operator login after production ingest
     scheduler         Run the APScheduler loop (ARQ only when REDIS_URL is set)
 """
 
@@ -32,9 +39,15 @@ from gridtrace_worker.jobs import (
     build_features,
     build_hotspots,
     enrich_amsterdam_context,
+    export_production_csv,
     generate_synthetic,
     ingest_context,
+    ingest_customers,
     ingest_dutch_energy,
+    ingest_grid,
+    ingest_operators,
+    ingest_production,
+    ingest_readings,
     poll_ned,
     refresh_demo,
     score_entities,
@@ -130,6 +143,56 @@ def cmd_ingest_dutch_energy(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_ingest_operators(args: argparse.Namespace) -> int:
+    with session_scope() as session:
+        result = ingest_operators.run(session, data_dir=args.data_dir)
+    print(json.dumps(result, indent=2, default=str))
+    return 0
+
+
+def cmd_ingest_grid(args: argparse.Namespace) -> int:
+    with session_scope() as session:
+        result = ingest_grid.run(session, data_dir=args.data_dir)
+    print(json.dumps(result, indent=2, default=str))
+    return 0
+
+
+def cmd_ingest_customers(args: argparse.Namespace) -> int:
+    with session_scope() as session:
+        result = ingest_customers.run(session, data_dir=args.data_dir)
+    print(json.dumps(result, indent=2, default=str))
+    return 0
+
+
+def cmd_ingest_readings(args: argparse.Namespace) -> int:
+    with session_scope() as session:
+        result = ingest_readings.run(session, data_dir=args.data_dir)
+    print(json.dumps(result, indent=2, default=str))
+    return 0
+
+
+def cmd_ingest_production(args: argparse.Namespace) -> int:
+    seed = _seed_value(args)
+    with session_scope() as session:
+        result = ingest_production.run(
+            session,
+            seed,
+            data_dir=args.data_dir,
+            truncate=not args.keep_existing,
+        )
+    log_event(logger, "command_complete", command="ingest-production", seed=seed)
+    print(json.dumps(result, indent=2, default=str))
+    return 0
+
+
+def cmd_export_production_csv(args: argparse.Namespace) -> int:
+    seed = _seed_value(args)
+    result = export_production_csv.run(seed, data_dir=args.data_dir)
+    log_event(logger, "command_complete", command="export-production-csv", seed=seed)
+    print(json.dumps(result, indent=2, default=str))
+    return 0
+
+
 def cmd_seed(args: argparse.Namespace) -> int:
     seed = _seed_value(args)
     summary = _run_seed_pipeline(seed)
@@ -214,6 +277,15 @@ def cmd_scheduler(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_ensure_demo_user(args: argparse.Namespace) -> int:
+    from gridtrace_api.modules.auth.bootstrap import ensure_demo_user
+
+    with session_scope() as session:
+        user = ensure_demo_user(session)
+        print(f"Demo user ready: {user.username} (id={user.id})")
+    return 0
+
+
 _COMMANDS = {
     "seed": cmd_seed,
     "refresh-demo": cmd_refresh_demo,
@@ -222,12 +294,19 @@ _COMMANDS = {
     "sync-olap": cmd_sync_olap,
     "enrich-amsterdam": cmd_enrich_amsterdam,
     "ingest-dutch-energy": cmd_ingest_dutch_energy,
+    "ingest-operators": cmd_ingest_operators,
+    "ingest-grid": cmd_ingest_grid,
+    "ingest-customers": cmd_ingest_customers,
+    "ingest-readings": cmd_ingest_readings,
+    "ingest-production": cmd_ingest_production,
+    "export-production-csv": cmd_export_production_csv,
     "generate-synthetic": cmd_generate,
     "build-features": cmd_build_features,
     "score-entities": cmd_score,
     "score-moment": cmd_score_moment,
     "build-hotspots": cmd_build_hotspots,
     "scheduler": cmd_scheduler,
+    "ensure-demo-user": cmd_ensure_demo_user,
 }
 
 
@@ -241,6 +320,17 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Path to liander_electricity_01012020.csv (ingest-dutch-energy)",
+    )
+    parser.add_argument(
+        "--data-dir",
+        type=str,
+        default=None,
+        help="Root directory containing production/ CSV folder (default: DATA_RAW_PATH)",
+    )
+    parser.add_argument(
+        "--keep-existing",
+        action="store_true",
+        help="Merge CSV data without truncating existing operational rows (ingest-production)",
     )
     return parser
 

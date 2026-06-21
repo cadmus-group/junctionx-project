@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
 
-.PHONY: help install dev up down logs migrate seed reset-demo test lint typecheck build generate-contracts
+.PHONY: help install dev up down logs migrate seed reset-demo ingest-production export-production test lint typecheck build generate-contracts
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -31,6 +31,12 @@ seed: ## Seed deterministic demo data
 
 reset-demo: ## Reset and regenerate the deterministic demo
 	pnpm demo:reset
+
+ingest-production: ## Ingest production CSVs and run scoring pipeline
+	pnpm db:ingest-production
+
+export-production: ## Export deterministic demo dataset as production CSV files
+	pnpm db:export-production
 
 test: ## Run all tests
 	pnpm test

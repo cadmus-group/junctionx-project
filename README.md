@@ -71,27 +71,49 @@ docs/        architecture, adr, api, data, demo
 
 ## Local setup
 
+**One command (Windows, macOS, Linux):**
+
 ```bash
 cp .env.example .env
 pnpm install
-./scripts/pip-install.sh
-docker compose up -d postgres      # waits for PostGIS to be healthy
+pnpm setup          # sync Python deps, start Postgres, migrate, seed scores
+pnpm dev            # web + API together
+```
+
+Or step by step:
+
+```bash
+pnpm py:sync        # uv sync Python 3.11 (api + worker)
+pnpm db:up          # docker compose up -d postgres
 pnpm db:migrate
-pnpm db:seed
+pnpm db:seed        # synthetic grid + meter readings + risk_scores
 pnpm dev
 ```
+
+**Load data via CSV** (same scoring pipeline, different entry path):
+
+```bash
+pnpm db:ingest-production   # auto-exports demo CSVs if missing, then ingest + score
+```
+
+Set `NEXT_PUBLIC_DEMO_MODE=false` in `.env` so the frontend reads live API data (not MSW mocks).
 
 For MOMENT TSFM scoring, install ML extras then enable in `.env`:
 
 ```bash
-./scripts/pip-install.sh              # base worker (fast)
-./scripts/pip-install-ml.sh           # MOMENT deps only (~2GB download)
+pnpm py:sync:ml     # optional MOMENT deps (~2GB download)
 # set MOMENT_ENABLED=true in .env
-source .venv/bin/activate
-python -m gridtrace_worker.main score-moment
+uv run --python 3.11 --package gridtrace-worker python -m gridtrace_worker.main score-moment
 ```
 
-Or the shortcut:
+Offline GBM experiments (research only — not wired to live API scoring):
+
+```bash
+pnpm py:sync:ml
+pnpm ml:train
+```
+
+Or the Makefile shortcut (requires Git Bash on Windows):
 
 ```bash
 make install && make up && make migrate && make seed && make dev

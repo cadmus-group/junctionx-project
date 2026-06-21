@@ -41,6 +41,7 @@ INNER JOIN risk_scores rs
    AND rs.is_current IS TRUE
 WHERE rs.risk_score >= :min_risk
   AND c.geometry IS NOT NULL
+  {region_clause}
   {bbox_clause}
 """
 
@@ -49,9 +50,15 @@ async def get_high_risk_meters(
     session: AsyncSession,
     bbox: tuple[float, float, float, float] | None,
     min_risk: float = 0.0,
+    region_id: str | None = None,
 ) -> dict[str, Any]:
     """Customer-level risk points as GeoJSON via PostGIS native aggregation."""
     params: dict[str, Any] = {"min_risk": min_risk}
+    if region_id:
+        params["region_id"] = region_id
+        region_clause = "AND c.region_id = :region_id"
+    else:
+        region_clause = ""
     if bbox is not None:
         params.update(
             {
@@ -69,7 +76,7 @@ async def get_high_risk_meters(
     else:
         bbox_clause = ""
 
-    stmt = text(_HIGH_RISK_METERS_SQL.format(bbox_clause=bbox_clause))
+    stmt = text(_HIGH_RISK_METERS_SQL.format(bbox_clause=bbox_clause, region_clause=region_clause))
     result = await session.execute(stmt, params)
     geojson = result.scalar_one()
     return geojson if isinstance(geojson, dict) else dict(geojson)
@@ -79,13 +86,17 @@ async def anomalies_geojson(
     session: AsyncSession,
     bbox: tuple[float, float, float, float] | None,
     min_risk: float = 0.0,
+    region_id: str | None = None,
 ) -> dict[str, Any]:
     """Customer-level risk points as a GeoJSON FeatureCollection."""
-    return await get_high_risk_meters(session, bbox, min_risk)
+    return await get_high_risk_meters(session, bbox, min_risk, region_id)
 
 
 async def hotspots(
-    session: AsyncSession, resolution: int = 3, min_risk: float = 0.0
+    session: AsyncSession,
+    resolution: int = 3,
+    min_risk: float = 0.0,
+    region_id: str | None = None,
 ) -> dict[str, Any]:
     """Coarse grid aggregation of customer risk into polygon hotspot cells.
 
@@ -108,6 +119,8 @@ async def hotspots(
         )
         .where(RiskScore.risk_score >= min_risk, Customer.geometry.isnot(None))
     )
+    if region_id:
+        stmt = stmt.where(Customer.region_id == region_id)
     rows = (await session.execute(stmt)).all()
 
     buckets: dict[tuple[int, int], list[float]] = defaultdict(list)

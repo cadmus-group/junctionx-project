@@ -1,5 +1,6 @@
+import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 import { GeoJsonLayer, PathLayer, ScatterplotLayer } from "@deck.gl/layers";
-import type { Layer, PickingInfo } from "@deck.gl/core";
+import type { Color, Layer, PickingInfo } from "@deck.gl/core";
 import type {
   Feature,
   FeatureCollection,
@@ -170,6 +171,69 @@ export function createH3RiskLayer(
     getLineColor: [128, 128, 124, 70],
     getLineWidth: 1,
     lineWidthMinPixels: 1,
+  });
+}
+
+/**
+ * Diverging blue → red color ramp mirroring the MapLibre "Create a heatmap
+ * layer" example. Ordered low → high density for deck.gl's `colorRange`.
+ */
+export const HEATMAP_COLOR_RANGE: Color[] = [
+  [33, 102, 172],
+  [103, 169, 207],
+  [209, 229, 240],
+  [253, 219, 199],
+  [239, 138, 98],
+  [178, 24, 43],
+];
+
+export interface RiskHeatmapLayerOptions {
+  id?: string;
+  visible?: boolean;
+  /** Multiplier on aggregated weight; higher = hotter. */
+  intensity?: number;
+  /** Distribution radius in pixels for each point. */
+  radiusPixels?: number;
+  /** Fraction of max weight below which pixels fade out (blur-like edge). */
+  threshold?: number;
+  opacity?: number;
+  /** Maps a feature's risk score to a heat weight. Defaults to risk_score/100. */
+  weightAccessor?: (feature: RiskPointFeature) => number;
+}
+
+/**
+ * Risk density heatmap over metering-point / anomaly features. Weights each
+ * point by its risk score so concentrations of high-risk points read as the
+ * hottest areas — the analytical analogue of the MapLibre heatmap example.
+ */
+export function createRiskHeatmapLayer(
+  data: RiskPointCollection,
+  options: RiskHeatmapLayerOptions = {}
+): Layer {
+  const {
+    id = "risk-heatmap",
+    visible = true,
+    intensity = 2,
+    radiusPixels = 48,
+    threshold = 0.03,
+    opacity = 0.8,
+    weightAccessor = (f) => {
+      const score = f.properties.risk_score;
+      return score == null ? 0.2 : Math.max(0.05, score / 100);
+    },
+  } = options;
+  return new HeatmapLayer<RiskPointFeature>({
+    id,
+    data: data.features,
+    visible,
+    opacity,
+    pickable: false,
+    radiusPixels,
+    intensity,
+    threshold,
+    colorRange: HEATMAP_COLOR_RANGE,
+    getPosition: pointPosition,
+    getWeight: weightAccessor,
   });
 }
 

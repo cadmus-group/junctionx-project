@@ -28,6 +28,26 @@ _PEAK_TOP_K = 3
 _MODEL_CACHE: dict[str, Any] = {}
 
 
+def release_model_cache() -> None:
+    """Drop cached MOMENT weights and free torch memory before downstream ML scoring."""
+    if not _MODEL_CACHE:
+        return
+    try:
+        import gc
+
+        import torch
+
+        for model in _MODEL_CACHE.values():
+            if hasattr(model, "to"):
+                model.to("cpu")
+        _MODEL_CACHE.clear()
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except ImportError:
+        _MODEL_CACHE.clear()
+
+
 @dataclass(frozen=True)
 class MomentAnomalyResult:
     customer_id: str
@@ -328,7 +348,7 @@ class MOMENTInferencePipeline:
         mask = mask.to(device)
 
         with torch.no_grad():
-            out = model(x, input_mask=mask)
+            out = model(x_enc=x, input_mask=mask)
             recon = getattr(out, "reconstruction", None)
             if recon is None and isinstance(out, dict):
                 recon = out.get("reconstruction")

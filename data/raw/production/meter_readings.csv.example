@@ -1,0 +1,5 @@
+customer_external_ref,timestamp,consumption_kwh,voltage,source
+CUST-00001,2026-01-01T00:00:00Z,1.25,230,ami
+CUST-00001,2026-01-01T01:00:00Z,1.10,230,ami
+CUST-00002,2026-01-01T00:00:00Z,0.85,230,ami
+CUST-00002,2026-01-01T01:00:00Z,0.90,230,ami

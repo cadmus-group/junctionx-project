@@ -1,0 +1,3 @@
+asset_external_id,timestamp,energy_input_kwh,energy_output_kwh,reading_quality,source
+TX-001,2026-01-01T00:00:00Z,12.50,,good,scada
+TX-001,2026-01-01T01:00:00Z,11.80,,good,scada
