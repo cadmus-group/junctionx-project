@@ -23,7 +23,7 @@ export function FlaggedReview() {
 
   const columns = useMemo<ColumnDef<Customer, unknown>[]>(
     () => [
-      { accessorKey: "external_ref", header: "Customer" },
+      { accessorKey: "external_ref", header: "Metering point" },
       { accessorKey: "customer_type", header: "Type" },
       { accessorKey: "region_id", header: "Region" },
       {
@@ -44,13 +44,13 @@ export function FlaggedReview() {
     <div className="flex flex-col">
       <PageHeader
         title="Flagged for review"
-        description="High and critical-risk customers prioritized for inspection. Indicators are advisory and require on-site human confirmation."
+        description="High and critical-risk metering points prioritized for inspection. Indicators are advisory and require on-site human confirmation."
       />
       <div className="space-y-4 p-6">
         <QueryBoundary
           query={query}
           isEmpty={(p) => p.items.length === 0}
-          emptyTitle="No flagged customers in range"
+          emptyTitle="No flagged metering points in range"
         >
           {(page) => (
             <DataTable

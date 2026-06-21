@@ -49,7 +49,7 @@ function CustomerPanel({ id }: { id: string }) {
 
   if (query.isPending) return <Skeleton className="h-40 w-full" />;
   if (query.isError || !query.data)
-    return <p className="text-sm text-danger">Could not load customer.</p>;
+    return <p className="text-sm text-danger">Could not load metering point.</p>;
 
   const { customer, risk, peer_comparison, spatial_context } = query.data;
   const currency = risk.currency as Currency;

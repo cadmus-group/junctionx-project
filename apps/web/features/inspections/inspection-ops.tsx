@@ -41,7 +41,7 @@ export function InspectionOps() {
       },
       {
         accessorKey: "external_ref",
-        header: "Customer",
+        header: "Metering point",
         cell: ({ row }) => (
           <Link
             href={`/customers/${row.original.customer_id}`}

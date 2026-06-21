@@ -110,7 +110,7 @@ export function MissionDetail({ id }: { id: string }) {
                     <div className="flex items-end gap-2">
                       <div className="space-y-1.5">
                         <Label htmlFor="add-case" className="text-xs text-muted-foreground">
-                          Add case by customer ID
+                          Add case by metering point ID
                         </Label>
                         <Input
                           id="add-case"
@@ -132,7 +132,7 @@ export function MissionDetail({ id }: { id: string }) {
                     {casesQuery.data.length === 0 ? (
                       <EmptyState
                         title="No cases yet"
-                        description="Add cases from the inspection queue or a customer investigation."
+                        description="Add cases from the inspection queue or a metering point investigation."
                       />
                     ) : (
                       <ul className="divide-y divide-border rounded-sm border border-border">

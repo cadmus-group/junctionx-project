@@ -80,7 +80,7 @@ export function AddToMissionDialog({
         <DialogHeader>
           <DialogTitle>Add to inspection mission</DialogTitle>
           <DialogDescription>
-            Queue this customer for on-site inspection. No action is taken without field
+            Queue this metering point for on-site inspection. No action is taken without field
             confirmation.
           </DialogDescription>
         </DialogHeader>

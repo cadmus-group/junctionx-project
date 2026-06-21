@@ -73,7 +73,7 @@ export function CommandCenter() {
           <Card>
             <CardHeader>
               <CardTitle>Risk tier breakdown</CardTitle>
-              <CardDescription>Scored customers by risk tier.</CardDescription>
+              <CardDescription>Scored metering points by risk tier.</CardDescription>
             </CardHeader>
             <CardContent>
               <QueryBoundary query={summaryQuery}>
@@ -87,7 +87,7 @@ export function CommandCenter() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top risk customers</CardTitle>
+            <CardTitle>Top risk metering points</CardTitle>
             <CardDescription>
               Model-prioritized for inspection. Risk indicators require human confirmation.
             </CardDescription>
@@ -96,7 +96,7 @@ export function CommandCenter() {
             <QueryBoundary
               query={topRiskQuery}
               isEmpty={(page) => page.items.length === 0}
-              emptyTitle="No high-risk customers in range"
+              emptyTitle="No high-risk metering points in range"
             >
               {(page) => <TopRiskList customers={page.items} />}
             </QueryBoundary>
