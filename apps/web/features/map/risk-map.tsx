@@ -164,21 +164,24 @@ export function RiskMap() {
             <DropdownMenuContent align="end">
               <DropdownMenuCheckboxItem
                 checked={visible.hotspots}
+                onSelect={(e) => e.preventDefault()}
                 onCheckedChange={(c) => setVisible((v) => ({ ...v, hotspots: !!c }))}
               >
                 Hotspots
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={visible.transformers}
+                onSelect={(e) => e.preventDefault()}
                 onCheckedChange={(c) => setVisible((v) => ({ ...v, transformers: !!c }))}
               >
                 Transformers
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={visible.customers}
+                onSelect={(e) => e.preventDefault()}
                 onCheckedChange={(c) => setVisible((v) => ({ ...v, customers: !!c }))}
               >
-                Customer risk
+                Metering points
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>

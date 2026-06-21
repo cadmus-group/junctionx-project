@@ -48,7 +48,7 @@ const NAV: NavItem[] = [
   { href: "/", label: "Command Center", icon: LayoutDashboard, roles: ["operator", "analyst"] },
   { href: "/map", label: "Risk Map", icon: MapIcon, roles: ALL },
   { href: "/assets", label: "Assets", icon: Boxes, roles: ["analyst"] },
-  { href: "/customers", label: "Customers", icon: Users, roles: ["analyst"] },
+  { href: "/customers", label: "Metering points", icon: Users, roles: ["analyst"] },
   { href: "/inspections", label: "Inspections", icon: ClipboardList, roles: ALL },
   { href: "/analytics", label: "Model Analytics", icon: Activity, roles: ["analyst"] },
   { href: "/data-quality", label: "Data Quality", icon: Database, roles: ["analyst"] },

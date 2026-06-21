@@ -31,7 +31,7 @@ export function TransformerTwin({ id }: { id: string }) {
 
   const columns = useMemo<ColumnDef<AssetCustomerSummary, unknown>[]>(
     () => [
-      { accessorKey: "external_ref", header: "Customer" },
+      { accessorKey: "external_ref", header: "Metering point" },
       { accessorKey: "customer_type", header: "Type" },
       {
         accessorKey: "estimated_loss_kwh",
@@ -107,16 +107,16 @@ export function TransformerTwin({ id }: { id: string }) {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Downstream customers</CardTitle>
+                    <CardTitle>Downstream metering points</CardTitle>
                     <CardDescription>
-                      {recon.customer_count} metered customers feed from this transformer.
+                      {recon.customer_count} metering points feed from this transformer.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <QueryBoundary
                       query={customersQuery}
                       isEmpty={(p) => p.items.length === 0}
-                      emptyTitle="No downstream customers"
+                      emptyTitle="No downstream metering points"
                     >
                       {(page) => (
                         <DataTable

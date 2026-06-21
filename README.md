@@ -174,11 +174,26 @@ suspicious customer → score/evidence/peers → add to inspection mission → r
 - **Database** → managed PostgreSQL with PostGIS
 - Migrations run as an explicit release step.
 
-## Ethical limitations
+## Data, privacy & ethics
 
-See [`docs/architecture/ethics.md`](./docs/architecture/ethics.md). In short:
-non-accusatory language, synthetic data only, visible confidence and alternative
-explanations, and mandatory human inspection before any action.
+GridTrace is built for a **public energy operator**, so it is designed to be
+privacy-respecting and non-accusatory by default. See
+[`docs/architecture/ethics.md`](./docs/architecture/ethics.md). In short:
+
+- **Metering points, not people.** The system scores **metering points /
+  connections**, identified only by a pseudonymous meter reference (e.g.
+  `NL-MTR-00012`). It stores consumption and grid features — **no names, no
+  addresses, no personal identity**. Data minimization by design.
+- **Signals, not accusations.** Outputs are *risk indicators to prioritize
+  inspection* — never determinations of wrongdoing. The UI uses non-accusatory
+  language and always shows confidence and alternative explanations (e.g. meter
+  faults, estimation gaps, occupancy changes).
+- **Human in the loop.** A confirmed result always requires an **on-site human
+  inspection**; no action is taken from a score alone.
+- **Synthetic data only.** All data in this repo is deterministic synthetic data
+  — no real customers are involved.
+- **Role-scoped access.** Operator / analyst / inspector each see only what their
+  role needs.
 
 ## Contributing
 

@@ -28,7 +28,7 @@ export function CustomersList() {
 
   const columns = useMemo<ColumnDef<Customer, unknown>[]>(
     () => [
-      { accessorKey: "external_ref", header: "Customer" },
+      { accessorKey: "external_ref", header: "Metering point" },
       { accessorKey: "customer_type", header: "Type" },
       { accessorKey: "region_id", header: "Region" },
       { accessorKey: "tariff_type", header: "Tariff" },
@@ -49,8 +49,8 @@ export function CustomersList() {
   return (
     <div className="flex flex-col">
       <PageHeader
-        title="Customers"
-        description="Risk-ranked customers. Indicators are advisory and require human inspection."
+        title="Metering points"
+        description="Risk-ranked metering points. Indicators are advisory and require human inspection."
       />
       <div className="space-y-4 p-6">
         <FilterBar showDateRange={false} />

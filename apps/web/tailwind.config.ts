@@ -10,6 +10,7 @@ const config: Config = {
     "./app/**/*.{ts,tsx}",
     "./features/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
     "./lib/**/*.{ts,tsx}",
     "../../packages/ui/src/**/*.{ts,tsx}",
     "../../packages/maps/src/**/*.{ts,tsx}",

@@ -258,7 +258,7 @@ export function buildRiskDistributionOption(
     },
     yAxis: {
       type: "value",
-      name: "customers",
+      name: "metering points",
       nameTextStyle: { color: palette.muted },
       axisLabel: { color: palette.muted },
       splitLine: splitLine(palette),
