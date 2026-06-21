@@ -39,8 +39,10 @@ RUN pnpm --filter @gridtrace/web build
 FROM base AS run
 ENV NODE_ENV=production
 ENV PORT=3000
+# Next.js standalone binds to localhost unless HOSTNAME is set (required in containers).
+ENV HOSTNAME=0.0.0.0
 COPY --from=build /app/apps/web/.next/standalone ./
 COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build /app/apps/web/public ./apps/web/public
 EXPOSE 3000
-CMD ["sh", "-c", "HOSTNAME=0.0.0.0 node apps/web/server.js"]
+CMD ["node", "apps/web/server.js"]
