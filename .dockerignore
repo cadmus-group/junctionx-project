@@ -1,3 +1,7 @@
+# Shared Docker build context — used by API, worker, and web Dockerfiles.
+# Do not exclude apps/api, apps/worker, pyproject.toml, or uv.lock here;
+# the Python images COPY those paths explicitly.
+
 # Git / editor
 .git
 .github
@@ -8,7 +12,7 @@
 .env
 .env.*
 
-# JS caches and installs
+# JS caches and installs (web image re-installs deps inside the container)
 node_modules
 **/.next
 **/.turbo
@@ -16,20 +20,10 @@ node_modules
 playwright-report
 coverage
 
-# Python (not needed for web image)
+# Python local artifacts
 .venv
 **/__pycache__
 **/*.pyc
-uv.lock
-pyproject.toml
-requirements.txt
-packages/domain-py
-
-# Apps not required for @gridtrace/web build
-apps/api
-apps/worker
-apps/ml-lab
-apps/docs
 
 # Heavy local data / ML artifacts
 data

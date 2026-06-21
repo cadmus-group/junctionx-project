@@ -1,0 +1,11 @@
+# Shared Railway config-as-code for GitHub deployments.
+# Service-specific Dockerfiles are set via RAILWAY_DOCKERFILE_PATH per service.
+# Web start command is set in Railway service settings (standalone Next.js server).
+
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

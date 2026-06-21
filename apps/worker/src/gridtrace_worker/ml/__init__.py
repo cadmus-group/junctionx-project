@@ -6,15 +6,17 @@ __all__ = ["ml_deps_available", "MOMENTInferencePipeline", "MomentAnomalyResult"
 
 
 def ml_deps_available() -> bool:
-    """Return True when torch, momentfm, and duckdb are importable."""
-    try:
-        import duckdb  # noqa: F401
-        import momentfm  # noqa: F401
-        import torch  # noqa: F401
+    """Return True when torch, momentfm, and duckdb are installed.
 
-        return True
-    except ImportError:
-        return False
+    Uses importlib metadata only — never imports torch/momentfm in the caller
+    process (macOS segfault when combined with LightGBM/SHAP after MOMENT).
+    """
+    import importlib.util
+
+    return all(
+        importlib.util.find_spec(name) is not None
+        for name in ("duckdb", "momentfm", "torch")
+    )
 
 
 def __getattr__(name: str):

@@ -3,6 +3,7 @@ builder = "DOCKERFILE"
 dockerfilePath = "infra/docker/web.Dockerfile"
 
 [deploy]
+startCommand = "HOSTNAME=0.0.0.0 node apps/web/server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
