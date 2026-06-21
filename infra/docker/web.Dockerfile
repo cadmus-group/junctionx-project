@@ -44,5 +44,7 @@ ENV HOSTNAME=0.0.0.0
 COPY --from=build /app/apps/web/.next/standalone ./
 COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build /app/apps/web/public ./apps/web/public
+COPY apps/web/scripts/railway-start.sh ./railway-start.sh
+RUN chmod +x ./railway-start.sh
 EXPOSE 3000
-CMD ["node", "apps/web/server.js"]
+CMD ["./railway-start.sh"]
