@@ -23,6 +23,7 @@ Commands:
     score-entities    Score customers + transformers and publish atomically
     score-moment      Run MOMENT inference only (debug; prints summary JSON)
     build-hotspots    Aggregate current risk into neighborhood hotspots
+    ensure-demo-user  Restore demo_operator login after production ingest
     scheduler         Run the APScheduler loop (ARQ only when REDIS_URL is set)
 """
 
@@ -276,6 +277,15 @@ def cmd_scheduler(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_ensure_demo_user(args: argparse.Namespace) -> int:
+    from gridtrace_api.modules.auth.bootstrap import ensure_demo_user
+
+    with session_scope() as session:
+        user = ensure_demo_user(session)
+        print(f"Demo user ready: {user.username} (id={user.id})")
+    return 0
+
+
 _COMMANDS = {
     "seed": cmd_seed,
     "refresh-demo": cmd_refresh_demo,
@@ -296,6 +306,7 @@ _COMMANDS = {
     "score-moment": cmd_score_moment,
     "build-hotspots": cmd_build_hotspots,
     "scheduler": cmd_scheduler,
+    "ensure-demo-user": cmd_ensure_demo_user,
 }
 
 

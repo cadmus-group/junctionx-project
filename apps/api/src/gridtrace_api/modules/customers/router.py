@@ -13,7 +13,6 @@ from gridtrace_api.modules.customers.schemas import (
     CustomerReadings,
     CustomerRiskProfile,
 )
-from gridtrace_api.modules.risk.repository import current_risk_map
 from gridtrace_api.shared.schemas import Page
 
 router = APIRouter(prefix="/customers", tags=["customers"])
@@ -28,23 +27,20 @@ async def list_customers(
     min_risk: float | None = None,
     tier: str | None = None,
 ) -> Page[CustomerOut]:
-    customers, total = await repo.list_customers(
-        session, pagination.offset, pagination.page_size, q=q
+    rows, total = await repo.list_customers_ranked(
+        session,
+        pagination.offset,
+        pagination.page_size,
+        q=q,
+        min_risk=min_risk,
+        tier=tier,
     )
-    risk_map = await current_risk_map(session, "customer", [c.id for c in customers])
-    items = []
-    for c in customers:
-        r = risk_map.get(c.id)
-        if min_risk is not None and (r is None or r.risk_score < min_risk):
-            continue
-        if tier is not None and (r is None or r.risk_tier != tier):
-            continue
-        items.append(
-            service.customer_to_out(
-                c, r.risk_score if r else None, r.risk_tier if r else None
-            )
+    items = [
+        service.customer_to_out(
+            c, r.risk_score if r else None, r.risk_tier if r else None
         )
-    items.sort(key=lambda x: x.risk_score or -1, reverse=True)
+        for c, r in rows
+    ]
     return Page(items=items, total=total, page=pagination.page, page_size=pagination.page_size)
 
 

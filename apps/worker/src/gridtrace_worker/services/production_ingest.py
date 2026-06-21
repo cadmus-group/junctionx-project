@@ -309,6 +309,11 @@ class ProductionIngest:
                     str(row["building_type"]).strip() if row.get("building_type") else None
                 ),
                 "zipcode": str(row["zipcode"]).strip() if row.get("zipcode") else None,
+                "baseline_annual_kwh": (
+                    float(row["baseline_annual_kwh"])
+                    if row.get("baseline_annual_kwh") not in (None, "")
+                    else None
+                ),
                 "transformer_id": asset_external_ids.get(tx_ext) if tx_ext else None,
                 "feeder_id": asset_external_ids.get(feeder_ext) if feeder_ext else None,
                 "region_id": region_codes.get(region_code) if region_code else None,

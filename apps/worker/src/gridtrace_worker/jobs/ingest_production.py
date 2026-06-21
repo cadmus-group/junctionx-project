@@ -19,8 +19,18 @@ from gridtrace_worker.jobs import (
 )
 from gridtrace_worker.log import get_logger, log_event
 from gridtrace_worker.services.production_ingest import ProductionIngest
+from gridtrace_worker.services.stedin_ingest import has_stedin_files, transform_stedin_to_production
 
 logger = get_logger("ingest_production")
+
+
+def _prepare_production_csvs(data_dir: str | None) -> dict | None:
+    """If Stedin open-data files are present, transform them into production CSVs."""
+    if not has_stedin_files(data_dir):
+        return None
+    summary = transform_stedin_to_production(data_root=data_dir)
+    log_event(logger, "stedin_production_csvs_ready", **summary)
+    return summary
 
 
 def run(
@@ -34,6 +44,7 @@ def run(
         refresh_demo.truncate_operational(session)
         log_event(logger, "production_truncate_complete")
 
+    stedin = _prepare_production_csvs(data_dir)
     ingest = ProductionIngest(data_dir)
     csv_summary = ingest.run_all(session)
 
@@ -55,6 +66,7 @@ def run(
     scoring = score_entities.run(session, seed)
 
     summary = {
+        "stedin_transform": stedin,
         "csv": csv_summary,
         "dutch_energy": dutch,
         "features": features,

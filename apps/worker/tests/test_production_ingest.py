@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import shutil
 from pathlib import Path
@@ -13,7 +14,6 @@ from gridtrace_worker.services.production_ingest import (
     GRID_ASSETS_FILE,
     METER_READINGS_FILE,
     OPERATORS_FILE,
-    ProductionIngest,
     _customer_metadata,
     _require_columns,
 )
@@ -43,7 +43,6 @@ def test_customer_metadata_omits_empty_optional_fields():
 
 
 def test_fixture_csvs_have_required_columns():
-    ingest = ProductionIngest(data_root=FIXTURES.parent / "fixtures")
     # FIXTURES is .../fixtures/production — ProductionIngest expects .../production subdir
     root = FIXTURES
     ops = pl.read_csv(root / OPERATORS_FILE)
@@ -79,10 +78,9 @@ def production_fixture_dir(tmp_path: Path) -> Path:
 def test_production_ingest_run_all(production_fixture_dir: Path):
     """End-to-end ingest against Postgres (gridtrace_test). Skips if unavailable."""
     pytest.importorskip("asyncpg")
+    from gridtrace_worker.services.production_ingest import ProductionIngest
     from sqlalchemy import create_engine, text
     from sqlalchemy.orm import sessionmaker
-
-    from gridtrace_worker.services.production_ingest import ProductionIngest
 
     url = os.environ.get(
         "TEST_DATABASE_URL",
@@ -121,10 +119,9 @@ def test_production_ingest_run_all(production_fixture_dir: Path):
             ON technical_loss_estimates (asset_id, timestamp)
             """,
         ):
-            try:
+            # tables may not exist yet on an empty DB
+            with contextlib.suppress(Exception):
                 conn.execute(text(stmt))
-            except Exception:
-                pass  # tables may not exist yet on empty DB
 
     Session = sessionmaker(bind=engine)
     ingest = ProductionIngest(data_root=production_fixture_dir)

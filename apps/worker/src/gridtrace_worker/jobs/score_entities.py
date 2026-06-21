@@ -30,9 +30,12 @@ from gridtrace_worker import MODEL_VERSION
 from gridtrace_worker.config import get_worker_config
 from gridtrace_worker.features import FEATURE_VERSION
 from gridtrace_worker.log import get_logger, log_event
+from gridtrace_worker.ml import ntl_scorer
 from gridtrace_worker.scoring import (
+    ScoredEntity,
     build_explanations,
     customer_components,
+    customer_components_from_ml,
     replace_anomaly_component,
     transformer_components,
 )
@@ -94,9 +97,9 @@ def _precision_at_k(labels: np.ndarray, scores: np.ndarray, k: int) -> float:
 def run(session: Session, seed: int | None = None) -> dict:
     cfg = get_worker_config()
     price = cfg.energy_price_eur_per_kwh
+    effective_seed = 42 if seed is None else seed
     now = datetime.now(UTC)
     moment_results, algorithm_override = _load_moment_results(cfg)
-    algorithm = algorithm_override or HEURISTIC_ALGORITHM
 
     snapshots = session.execute(
         select(FeatureSnapshot).where(FeatureSnapshot.feature_version == FEATURE_VERSION)
@@ -107,17 +110,41 @@ def run(session: Session, seed: int | None = None) -> dict:
     customer_snaps = [s for s in snapshots if s.entity_type == "customer"]
     transformer_snaps = [s for s in snapshots if s.entity_type == "transformer"]
 
+    # Train the live AI model (supervised theft classifier + IsolationForest) on the
+    # current labelled population. Falls back to the deterministic heuristic when
+    # scikit-learn is unavailable or the labels are too sparse to train.
+    ml_scoring = ntl_scorer.score_customers(customer_snaps, seed=effective_seed)
+    if ml_scoring is not None:
+        algorithm = ml_scoring.algorithm
+        if algorithm_override:
+            algorithm = f"{ml_scoring.algorithm}+moment-anomaly"
+        log_event(
+            logger,
+            "ml_scoring_trained",
+            algorithm=ml_scoring.algorithm,
+            **ml_scoring.metrics,
+        )
+    else:
+        algorithm = algorithm_override or HEURISTIC_ALGORITHM
+        log_event(logger, "ml_scoring_skipped", reason="unavailable_or_insufficient_labels")
+
     tx_unexplained: dict[str, float] = {}
     for s in transformer_snaps:
         tx_unexplained[s.entity_id] = float(s.features_json.get("unexplained_total_kwh", 0.0))
 
     # Pass 1: component scores + suspicion weights, grouped by parent transformer.
-    cust_scored: dict[str, object] = {}
+    cust_scored: dict[str, ScoredEntity] = {}
     by_tx_refs: dict[str, list[str]] = defaultdict(list)
     cust_features: dict[str, dict] = {}
     for s in customer_snaps:
         feats = s.features_json
-        scored = customer_components(feats)
+        ml_res = ml_scoring.results.get(s.entity_id) if ml_scoring else None
+        if ml_res is not None:
+            scored = customer_components_from_ml(
+                feats, ml_res.supervised_probability, ml_res.anomaly_score
+            )
+        else:
+            scored = customer_components(feats)
         cust_scored[s.entity_id] = scored
         cust_features[s.entity_id] = feats
         by_tx_refs[feats.get("parent_transformer_entity_id", "")].append(s.entity_id)
@@ -159,6 +186,9 @@ def run(session: Session, seed: int | None = None) -> dict:
             optional_factor=1.0,
         )
         explanations = build_explanations(scored, feats, share)
+        ml_res = ml_scoring.results.get(entity_id) if ml_scoring else None
+        if ml_res is not None:
+            explanations.extend(ml_res.explanations)
         if moment and moment_peak_fn:
             explanations.extend(moment_peak_fn(moment))
 
@@ -222,7 +252,11 @@ def run(session: Session, seed: int | None = None) -> dict:
         "scored_customers": int(labels.size),
         "moment_customers": moment_applied,
         "risk_weights_version": RISK_WEIGHTS_VERSION,
+        "ml_enabled": ml_scoring is not None,
     }
+    if ml_scoring is not None:
+        metrics["ml"] = ml_scoring.metrics
+        metrics["feature_importances"] = ml_scoring.feature_importances
     session.execute(delete(ModelRegistry).where(ModelRegistry.model_version == MODEL_VERSION))
     session.execute(update(ModelRegistry).values(is_active=False))
     session.add(
@@ -236,8 +270,10 @@ def run(session: Session, seed: int | None = None) -> dict:
             is_active=True,
             k=PRECISION_AT_K,
             notes=(
-                "MOMENT-1-large hybrid scorer when MOMENT_ENABLED=true; "
-                "otherwise heuristic anomaly component."
+                "Supervised theft/no-theft classifier + IsolationForest anomaly "
+                "(SHAP explanations when available) trained on the live population; "
+                "MOMENT-1-large anomaly override when MOMENT_ENABLED=true; "
+                "deterministic heuristic fallback when scikit-learn is unavailable."
             ),
         )
     )

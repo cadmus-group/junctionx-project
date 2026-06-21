@@ -3,6 +3,12 @@
 The ML lifecycle lives in `apps/ml-lab` (`gridtrace_ml`); batch scoring for the app
 runs in `apps/worker`. **Heavy work never runs inside API request handlers.**
 
+> **Production vs research:** The live app scores via `apps/worker` (deterministic
+> heuristics, optional MOMENT anomaly). `apps/ml-lab` trains CatBoost/LightGBM for
+> offline evaluation and artifact export — those models are **not** loaded by the worker
+> or API today. Run `pnpm ml:train` for experiments; run `pnpm db:seed` or
+> `pnpm db:ingest-production` for authoritative scores in Postgres.
+
 ## Stages
 
 1. **datasets / synthetic** — deterministic generation seeded by `DEMO_SEED`.
