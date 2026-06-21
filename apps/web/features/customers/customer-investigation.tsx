@@ -3,7 +3,7 @@
 import { ActualVsExpectedChart, PeerComparisonChart } from "@gridtrace/charts";
 import type { RiskComponents } from "@gridtrace/contracts";
 import type { Currency } from "@gridtrace/config";
-import { formatCurrency, formatEnergyKwh, formatPercent } from "@gridtrace/domain";
+import { formatCurrency, formatEnergyKwh, formatNumber, formatPercent } from "@gridtrace/domain";
 import {
   Button,
   Card,
@@ -138,7 +138,10 @@ export function CustomerInvestigation({ id }: { id: string }) {
                         label="Share of transformer loss"
                         value={formatPercent(loss_attribution_share)}
                       />
-                      <Row label="Inspection priority" value={String(risk.inspection_priority)} />
+                      <Row
+                        label="Inspection priority"
+                        value={formatNumber(Math.round(risk.inspection_priority))}
+                      />
                       <Row label="Model version" value={risk.model_version} />
                       <Row label="Feature version" value={risk.feature_version} />
                     </CardContent>

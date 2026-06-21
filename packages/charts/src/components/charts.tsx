@@ -26,6 +26,8 @@ export interface BaseChartProps {
   height?: number | string;
   className?: string;
   palette?: ChartPalette;
+  /** Text alternative for assistive tech (forwarded to the chart's role="img" wrapper). */
+  ariaLabel?: string;
 }
 
 export function TimeSeriesChart({
