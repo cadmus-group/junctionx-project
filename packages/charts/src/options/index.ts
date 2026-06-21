@@ -34,6 +34,11 @@ function shortTime(iso: string): string {
   return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
 }
 
+/** Compact y-axis ticks: 150000 → "150k"; small values are left as-is. */
+function compactNumber(value: number): string {
+  return Math.abs(value) >= 1000 ? `${value / 1000}k` : `${value}`;
+}
+
 export function buildLossTrendOption(
   trend: LossTrend,
   { palette = DEFAULT_PALETTE }: OptionArgs = {}
@@ -52,9 +57,7 @@ export function buildLossTrendOption(
     },
     yAxis: {
       type: "value",
-      name: "kWh",
-      nameTextStyle: { color: palette.muted },
-      axisLabel: { color: palette.muted },
+      axisLabel: { color: palette.muted, formatter: compactNumber },
       splitLine: splitLine(palette),
     },
     series: [
