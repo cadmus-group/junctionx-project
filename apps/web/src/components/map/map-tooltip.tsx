@@ -54,7 +54,7 @@ export function MapTooltip({ feature, x, y }: MapTooltipProps) {
 
   return (
     <div
-      className="pointer-events-none absolute z-20 w-60 overflow-hidden rounded-md border border-border bg-surface-elevated text-xs shadow-xl"
+      className="pointer-events-none absolute z-50 w-60 overflow-hidden rounded-md border border-border bg-surface-elevated text-xs shadow-xl"
       style={{ left: x + 14, top: y + 14 }}
     >
       {/* Risk-tier accent strip — instant signal */}

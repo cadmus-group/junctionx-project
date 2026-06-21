@@ -88,8 +88,10 @@ export function GridTraceMap({
 
   return (
     <div className={className ?? "relative h-full w-full"}>
-      <div ref={containerRef} className="absolute inset-0" />
-      {children}
+      <div ref={containerRef} className="absolute inset-0 z-0" />
+      {children ? (
+        <div className="pointer-events-none absolute inset-0 z-10">{children}</div>
+      ) : null}
     </div>
   );
 }
