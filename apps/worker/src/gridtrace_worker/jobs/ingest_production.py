@@ -39,6 +39,7 @@ def run(
     *,
     data_dir: str | None = None,
     truncate: bool = True,
+    moment_results_path: str | None = None,
 ) -> dict:
     if truncate:
         refresh_demo.truncate_operational(session)
@@ -63,7 +64,7 @@ def run(
     poll_ned.run(session, seed)
     sync_olap.run(session, seed)
     features = build_features.run(session, seed)
-    scoring = score_entities.run(session, seed)
+    scoring = score_entities.run(session, seed, moment_results_path=moment_results_path)
 
     summary = {
         "stedin_transform": stedin,

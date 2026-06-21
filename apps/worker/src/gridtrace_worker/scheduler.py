@@ -18,6 +18,7 @@ from gridtrace_worker.jobs import (
     score_entities,
     sync_olap,
 )
+from gridtrace_worker.jobs.score_entities import moment_results_path_for_scoring
 from gridtrace_worker.log import get_logger, log_event
 
 logger = get_logger("scheduler")
@@ -25,6 +26,8 @@ logger = get_logger("scheduler")
 
 def _refresh_scores() -> None:
     """Recompute features, scores, and hotspots from current readings."""
+    from pathlib import Path
+
     cfg = get_worker_config()
     log_event(
         logger,
@@ -32,12 +35,17 @@ def _refresh_scores() -> None:
         moment_enabled=cfg.moment_active,
         model_version=cfg.moment_model_name if cfg.moment_active else None,
     )
-    with session_scope() as session:
-        poll_ned.run(session)
-        sync_olap.run(session)
-        build_features.run(session)
-        score_entities.run(session)
-        build_hotspots.run(session)
+    moment_path, exported_path = moment_results_path_for_scoring()
+    try:
+        with session_scope() as session:
+            poll_ned.run(session)
+            sync_olap.run(session)
+            build_features.run(session)
+            score_entities.run(session, moment_results_path=moment_path)
+            build_hotspots.run(session)
+    finally:
+        if exported_path:
+            Path(exported_path).unlink(missing_ok=True)
     log_event(logger, "refresh_scores_complete")
 
 

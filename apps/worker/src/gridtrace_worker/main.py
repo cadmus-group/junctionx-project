@@ -64,15 +64,28 @@ def _seed_value(args: argparse.Namespace) -> int:
     return get_worker_config().demo_seed
 
 
+def _moment_results_path_for_scoring(explicit: str | None = None) -> tuple[str | None, str | None]:
+    from gridtrace_worker.jobs.score_entities import moment_results_path_for_scoring
+
+    return moment_results_path_for_scoring(explicit)
+
+
 def _run_seed_pipeline(seed: int) -> dict:
     """generate-synthetic -> enrich -> sync OLAP -> build-features -> score-entities."""
-    with session_scope() as session:
-        gen = generate_synthetic.run(session, seed)
-        enrich_amsterdam_context.run(session, seed)
-        poll_ned.run(session, seed)
-        sync_olap.run(session, seed)
-        feat = build_features.run(session, seed)
-        scored = score_entities.run(session, seed)
+    from pathlib import Path
+
+    moment_path, exported_path = _moment_results_path_for_scoring()
+    try:
+        with session_scope() as session:
+            gen = generate_synthetic.run(session, seed)
+            enrich_amsterdam_context.run(session, seed)
+            poll_ned.run(session, seed)
+            sync_olap.run(session, seed)
+            feat = build_features.run(session, seed)
+            scored = score_entities.run(session, seed, moment_results_path=moment_path)
+    finally:
+        if exported_path:
+            Path(exported_path).unlink(missing_ok=True)
     return {"generate": gen.get("showcase"), "features": feat, "scoring": scored}
 
 
@@ -93,8 +106,21 @@ def cmd_build_features(args: argparse.Namespace) -> int:
 
 
 def cmd_score(args: argparse.Namespace) -> int:
-    with session_scope() as session:
-        result = score_entities.run(session, _seed_value(args))
+    from pathlib import Path
+
+    moment_path, exported_path = _moment_results_path_for_scoring(
+        getattr(args, "moment_results", None)
+    )
+    try:
+        with session_scope() as session:
+            result = score_entities.run(
+                session,
+                _seed_value(args),
+                moment_results_path=moment_path,
+            )
+    finally:
+        if exported_path:
+            Path(exported_path).unlink(missing_ok=True)
     print(json.dumps(result, indent=2, default=str))
     return 0
 
@@ -172,14 +198,22 @@ def cmd_ingest_readings(args: argparse.Namespace) -> int:
 
 
 def cmd_ingest_production(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
     seed = _seed_value(args)
-    with session_scope() as session:
-        result = ingest_production.run(
-            session,
-            seed,
-            data_dir=args.data_dir,
-            truncate=not args.keep_existing,
-        )
+    moment_path, exported_path = _moment_results_path_for_scoring()
+    try:
+        with session_scope() as session:
+            result = ingest_production.run(
+                session,
+                seed,
+                data_dir=args.data_dir,
+                truncate=not args.keep_existing,
+                moment_results_path=moment_path,
+            )
+    finally:
+        if exported_path:
+            Path(exported_path).unlink(missing_ok=True)
     log_event(logger, "command_complete", command="ingest-production", seed=seed)
     print(json.dumps(result, indent=2, default=str))
     return 0
@@ -345,6 +379,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Write full MOMENT per-customer JSON results to this path (score-moment)",
+    )
+    parser.add_argument(
+        "--moment-results",
+        type=str,
+        default=None,
+        help="Apply precomputed MOMENT JSON from score-moment --output (score-entities)",
     )
     return parser
 

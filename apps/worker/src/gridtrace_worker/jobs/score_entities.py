@@ -48,58 +48,52 @@ MOMENT_ALGORITHM = "moment-reconstruction-hybrid+domain-composite"
 HEURISTIC_ALGORITHM = "deterministic-logistic-heuristic+zscore-anomaly"
 
 
-def _load_moment_results(cfg) -> tuple[dict, str | None]:
-    """Run MOMENT inference when enabled; return empty dict on failure.
+def _export_moment_results(cfg) -> str | None:
+    """Run MOMENT in a child process and return a JSON results path."""
+    import subprocess
+    import sys
+    import tempfile
+    from pathlib import Path
 
-    MOMENT uses torch in a child process so the main worker can run LightGBM/SHAP
-    without the two runtimes interfering after inference.
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+        output_path = Path(tmp.name)
+
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "gridtrace_worker.main",
+            "score-moment",
+            "--output",
+            str(output_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        output_path.unlink(missing_ok=True)
+        raise RuntimeError(proc.stderr.strip() or proc.stdout.strip() or "score-moment failed")
+    return str(output_path)
+
+
+def moment_results_path_for_scoring(explicit: str | None = None) -> tuple[str | None, str | None]:
+    """Export MOMENT scores before opening a DB session.
+
+    Returns ``(path, exported_path)`` where ``exported_path`` should be unlinked
+    after scoring when this function created the file.
     """
+    if explicit:
+        return explicit, None
+    cfg = get_worker_config()
     if not cfg.moment_active:
-        return {}, None
+        return None, None
     try:
-        import json
-        import subprocess
-        import sys
-        import tempfile
-        from pathlib import Path
-
-        from gridtrace_worker.ml.moment_pipeline import moment_results_from_json
-
-        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
-            output_path = Path(tmp.name)
-
-        try:
-            proc = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "gridtrace_worker.main",
-                    "score-moment",
-                    "--output",
-                    str(output_path),
-                ],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            if proc.returncode != 0:
-                raise RuntimeError(proc.stderr.strip() or proc.stdout.strip() or "score-moment failed")
-
-            payload = json.loads(output_path.read_text())
-            results = moment_results_from_json(payload)
-        finally:
-            output_path.unlink(missing_ok=True)
-
-        log_event(
-            logger,
-            "moment_scoring_applied",
-            customers=len(results),
-            model=cfg.moment_model_name,
-        )
-        return results, MOMENT_ALGORITHM
-    except Exception as exc:  # noqa: BLE001 — fallback preserves demo reliability
+        path = _export_moment_results(cfg)
+        return path, path
+    except Exception as exc:  # noqa: BLE001
         log_event(logger, "moment_scoring_failed", error=str(exc))
-        return {}, None
+        return None, None
 
 
 def _average_precision(labels: np.ndarray, scores: np.ndarray) -> float:
@@ -128,12 +122,34 @@ def _precision_at_k(labels: np.ndarray, scores: np.ndarray, k: int) -> float:
     return float(labels[order].mean())
 
 
-def run(session: Session, seed: int | None = None) -> dict:
+def run(
+    session: Session,
+    seed: int | None = None,
+    *,
+    moment_results_path: str | None = None,
+) -> dict:
     cfg = get_worker_config()
     price = cfg.energy_price_eur_per_kwh
     effective_seed = 42 if seed is None else seed
     now = datetime.now(UTC)
-    moment_results, algorithm_override = _load_moment_results(cfg)
+    moment_results: dict = {}
+    algorithm_override = None
+    if moment_results_path:
+        import json
+        from pathlib import Path
+
+        from gridtrace_worker.ml.moment_pipeline import moment_results_from_json
+
+        payload = json.loads(Path(moment_results_path).read_text())
+        moment_results = moment_results_from_json(payload)
+        algorithm_override = MOMENT_ALGORITHM if moment_results else None
+        log_event(
+            logger,
+            "moment_scoring_applied",
+            customers=len(moment_results),
+            model=cfg.moment_model_name,
+            source="file",
+        )
 
     snapshots = session.execute(
         select(FeatureSnapshot).where(FeatureSnapshot.feature_version == FEATURE_VERSION)
