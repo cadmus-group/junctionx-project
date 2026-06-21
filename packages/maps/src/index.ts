@@ -24,7 +24,9 @@ export {
   createTransformerLayer,
   createCustomerRiskLayer,
   createH3RiskLayer,
+  createRiskHeatmapLayer,
   createInspectionRouteLayer,
+  HEATMAP_COLOR_RANGE,
   type RiskPointProperties,
   type RiskPointFeature,
   type RiskPointCollection,
@@ -32,5 +34,6 @@ export {
   type CustomerRiskLayerOptions,
   type TransformerLayerOptions,
   type H3RiskLayerOptions,
+  type RiskHeatmapLayerOptions,
   type InspectionRouteLayerOptions,
 } from "./layers";

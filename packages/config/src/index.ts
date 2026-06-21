@@ -48,7 +48,7 @@ export const RISK_LABELS: Record<RiskTierLabel, string> = {
 /** Map defaults centered on the seeded demo operator (Netherlands). */
 export const MAP_DEFAULTS = {
   center: [4.9041, 52.3676] as [number, number],
-  zoom: 11,
+  zoom: 13,
   minZoom: 4,
   maxZoom: 18,
   /** Below this zoom, do not render individual customer points. */

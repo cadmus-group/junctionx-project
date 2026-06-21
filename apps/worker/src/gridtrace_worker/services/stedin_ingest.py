@@ -18,6 +18,7 @@ import polars as pl
 
 from gridtrace_worker.config import get_worker_config
 from gridtrace_worker.log import get_logger, log_event
+from gridtrace_worker.services.geocode import PdokGeocoder
 from gridtrace_worker.services.production_ingest import PRODUCTION_SUBDIR
 
 logger = get_logger("stedin_ingest")
@@ -72,8 +73,8 @@ _NL_PC2_CENTROIDS: dict[int, tuple[float, float]] = {
     56: (5.70, 51.98),
     57: (5.75, 51.99),
     58: (5.80, 52.00),
-    59: (5.85, 51.01),
-    60: (5.90, 51.02),
+    59: (5.85, 52.01),
+    60: (5.90, 52.02),
 }
 _STEDIN_DEFAULT_CENTROID = (4.48, 51.92)  # Rotterdam
 
@@ -101,15 +102,50 @@ def _external_ref(postcode: str, street: str, city: str) -> str:
     return f"STEDIN-{digest.upper()}"
 
 
-def _postcode_to_lonlat(postcode: str, city: str) -> tuple[float, float]:
-    """Approximate WGS84 from Dutch postcode (PC2 centroid + PC4 jitter)."""
+def _hash_unit(*parts: str) -> tuple[float, float]:
+    """Two independent deterministic values in [0, 1) from the given key parts."""
+    digest = hashlib.sha256("|".join(parts).encode()).digest()
+    u = int.from_bytes(digest[0:4], "big") / 0x1_0000_0000
+    v = int.from_bytes(digest[4:8], "big") / 0x1_0000_0000
+    return u, v
+
+
+def _postcode_to_lonlat(postcode: str, city: str, street: str = "") -> tuple[float, float]:
+    """Approximate WGS84 within a Dutch postcode area.
+
+    Longitude and latitude are scattered from *independent* hash digests so the
+    two axes are uncorrelated (no diagonal line), with a per-PC4 sub-cluster to
+    keep nearby postcodes grouped and per-street jitter so points don't stack.
+    """
     pc = postcode.replace(" ", "").upper()
-    pc4 = int(pc[:4]) if len(pc) >= 4 and pc[:4].isdigit() else 3011
-    pc2 = pc4 // 100
+    pc4 = pc[:4] if len(pc) >= 4 and pc[:4].isdigit() else "3011"
+    pc2 = int(pc4) // 100
     base_lon, base_lat = _NL_PC2_CENTROIDS.get(pc2, _STEDIN_DEFAULT_CENTROID)
-    lon = base_lon + ((pc4 % 100) // 10) * 0.0015 + (pc4 % 10) * 0.00015
-    lat = base_lat + ((pc4 // 10) % 10) * 0.001 + (pc4 % 10) * 0.0001
+
+    # PC4 picks a sub-cluster centre within the PC2 area (keeps locality).
+    cu, cv = _hash_unit(pc4)
+    cluster_lon = base_lon + (cu - 0.5) * 0.16
+    cluster_lat = base_lat + (cv - 0.5) * 0.11
+
+    # Per-street/postcode fine jitter within the sub-cluster (avoids stacking).
+    ju, jv = _hash_unit(pc, street)
+    lon = cluster_lon + (ju - 0.5) * 0.012
+    lat = cluster_lat + (jv - 0.5) * 0.009
     return round(lon, 6), round(lat, 6)
+
+
+def _resolve_lonlat(
+    geocoder: PdokGeocoder | None,
+    postcode: str,
+    city: str,
+    street: str = "",
+) -> tuple[float, float]:
+    """Real PDOK coordinates when available, else the synthetic approximation."""
+    if geocoder is not None:
+        point = geocoder.lookup(postcode, street, city)
+        if point is not None:
+            return round(point[0], 6), round(point[1], 6)
+    return _postcode_to_lonlat(postcode, city, street)
 
 
 def _read_stedin_file(path: Path) -> pl.DataFrame:
@@ -253,6 +289,7 @@ def transform_stedin_to_production(
 
     elk = load_stedin_elk(src)
     segments = _build_segment_table(elk)
+    geocoder = PdokGeocoder(cache_path=Path(cfg.data_processed_path) / "pdok_geocode_cache.json")
     log_event(
         logger,
         "stedin_segments_selected",
@@ -260,6 +297,7 @@ def transform_stedin_to_production(
         segments=segments.height,
         max_segments=MAX_SEGMENTS,
         profile_hours=PROFILE_HOURS,
+        geocoder_enabled=geocoder.enabled,
     )
 
     pl.DataFrame(
@@ -292,14 +330,29 @@ def transform_stedin_to_production(
     pc4_groups = (
         segments.with_columns(pl.col("postcode").str.slice(0, 4).alias("pc4"))
         .group_by("pc4")
-        .agg(pl.col("city").first().alias("city"), pl.len().alias("segments"))
+        .agg(
+            pl.col("city").first().alias("city"),
+            pl.col("postcode").first().alias("sample_postcode"),
+            pl.col("street").first().alias("sample_street"),
+            pl.len().alias("segments"),
+        )
         .sort("segments", descending=True)
     )
+
+    geocode_keys = [
+        (str(r["postcode"]), str(r["street"]), str(r["city"]))
+        for r in segments.select("postcode", "street", "city").iter_rows(named=True)
+    ]
+    geocode_keys += [
+        (str(r["sample_postcode"]), str(r["sample_street"]), str(r["city"]))
+        for r in pc4_groups.select("sample_postcode", "sample_street", "city").iter_rows(named=True)
+    ]
+    geocoder.prewarm(geocode_keys)
 
     grid_rows: list[dict] = []
     for row in pc4_groups.iter_rows(named=True):
         pc4 = row["pc4"]
-        lon, lat = _postcode_to_lonlat(f"{pc4}AA", row["city"])
+        lon, lat = _resolve_lonlat(geocoder, row["sample_postcode"], row["city"], row["sample_street"])
         feeder_id = f"FD-{pc4}"
         tx_id = f"TX-{pc4}"
         grid_rows.append(
@@ -344,7 +397,7 @@ def transform_stedin_to_production(
         tx_id = f"TX-{pc4}"
         feeder_id = f"FD-{pc4}"
         external_ref = _external_ref(postcode, street, city)
-        lon, lat = _postcode_to_lonlat(postcode, city)
+        lon, lat = _resolve_lonlat(geocoder, postcode, city, street)
 
         baseline = float(row["sja_baseline"] or row["sja_latest"])
         latest = float(row["sja_latest"])
@@ -448,6 +501,8 @@ def transform_stedin_to_production(
     pl.DataFrame(asset_energy_rows).write_csv(out_root / "asset_energy_readings.csv")
     pl.DataFrame(tech_loss_rows).write_csv(out_root / "technical_loss_estimates.csv")
 
+    geocoder.close()
+
     summary = {
         "source_dir": str(src),
         "output_dir": str(out_root),
@@ -456,6 +511,9 @@ def transform_stedin_to_production(
         "meter_readings": len(meter_rows),
         "grid_assets": len(grid_rows),
         "profile_hours": PROFILE_HOURS,
+        "geocode_hits": geocoder.hits,
+        "geocode_misses": geocoder.misses,
+        "geocode_failures": geocoder.failures,
     }
     log_event(logger, "stedin_transform_complete", **summary)
     return summary

@@ -18,6 +18,16 @@ from gridtrace_worker.connectors.base import ConnectorResult, OfflineConnector
 NED_BASE_URL = "https://api.ned.nl/v1"
 NED_UTILIZATIONS = f"{NED_BASE_URL}/utilizations"
 
+# NED enum identifiers (see /v1/points, /v1/types, /v1/classifications, /v1/activities,
+# /v1/granularities). ``point`` is the geographic region and ``type`` the energy carrier.
+NED_POINT_NL = 0  # Nederland (national)
+NED_TYPE_WIND = 1
+NED_TYPE_SOLAR = 2
+NED_TYPE_ELECTRICITY_MIX = 27
+NED_CLASSIFICATION_CURRENT = 2
+NED_ACTIVITY_PROVIDING = 1
+NED_GRANULARITY_HOUR = 5
+
 
 class NEDConnector(OfflineConnector):
     """Fetch macro grid baseline rows for DuckDB ``ned_grid_status.parquet``."""
@@ -60,13 +70,15 @@ class NEDConnector(OfflineConnector):
         now = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
         start = now - timedelta(hours=hours)
         headers = {"X-AUTH-TOKEN": self.api_key or "", "accept": "application/ld+json"}
+        # Baseline series: national electricity mix (total supplied power). Solar and
+        # wind use the same query with a different energy ``type`` for the mix shares.
         params = {
-            "point": 0,
-            "type": 2,
-            "granularity": 3,
+            "point": NED_POINT_NL,
+            "type": NED_TYPE_ELECTRICITY_MIX,
+            "granularity": NED_GRANULARITY_HOUR,
             "granularitytimezone": 1,
-            "classification": 2,
-            "activity": 1,
+            "classification": NED_CLASSIFICATION_CURRENT,
+            "activity": NED_ACTIVITY_PROVIDING,
             "validfrom[after]": start.strftime("%Y-%m-%d"),
             "validfrom[strictly_before]": (now + timedelta(days=1)).strftime("%Y-%m-%d"),
         }
@@ -75,25 +87,29 @@ class NEDConnector(OfflineConnector):
             load_resp.raise_for_status()
             load_rows = _parse_utilizations(load_resp.json())
 
-            solar_params = {**params, "classification": 1, "point": 1}
-            wind_params = {**params, "classification": 1, "point": 2}
+            solar_params = {**params, "type": NED_TYPE_SOLAR}
+            wind_params = {**params, "type": NED_TYPE_WIND}
             solar_resp = client.get(NED_UTILIZATIONS, headers=headers, params=solar_params)
             wind_resp = client.get(NED_UTILIZATIONS, headers=headers, params=wind_params)
             solar_rows = _parse_utilizations(solar_resp.json()) if solar_resp.is_success else {}
             wind_rows = _parse_utilizations(wind_resp.json()) if wind_resp.is_success else {}
 
+        # NED reports energy volume (kWh) per sub-hourly slice. _parse_utilizations
+        # sums those slices into hourly buckets; hourly kWh over a 1-hour window is
+        # numerically the average power in kW, so divide by 1000 to get MW.
         records: list[dict[str, Any]] = []
-        for ts, load_mw in sorted(load_rows.items()):
-            solar = float(solar_rows.get(ts, 0.0))
-            wind = float(wind_rows.get(ts, 0.0))
-            total_gen = max(solar + wind, 1.0)
+        for ts, load_kwh in sorted(load_rows.items()):
+            load_mw = load_kwh / 1000.0
+            solar_mw = float(solar_rows.get(ts, 0.0)) / 1000.0
+            wind_mw = float(wind_rows.get(ts, 0.0)) / 1000.0
+            total_gen = max(solar_mw + wind_mw, 1.0)
             records.append(
                 {
                     "timestamp": ts,
                     "national_load_mw": round(load_mw, 4),
-                    "production_mix_solar": round(solar / total_gen, 6),
-                    "production_mix_wind": round(wind / total_gen, 6),
-                    "grid_status_flag": _grid_status(load_mw, solar, wind),
+                    "production_mix_solar": round(solar_mw / total_gen, 6),
+                    "production_mix_wind": round(wind_mw / total_gen, 6),
+                    "grid_status_flag": _grid_status(load_mw, solar_mw, wind_mw),
                 }
             )
         return records[-hours:] if records else self._fetch_offline(hours)
@@ -124,8 +140,18 @@ class NEDConnector(OfflineConnector):
         return records
 
 
+def _hour_bucket(ts: str) -> str:
+    """Truncate an ISO-8601 timestamp to the start of its hour."""
+    parsed = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    return parsed.replace(minute=0, second=0, microsecond=0).isoformat()
+
+
 def _parse_utilizations(payload: Any) -> dict[str, float]:
-    """Extract timestamp -> MW from NED hydra/ld+json payloads."""
+    """Extract hourly timestamp -> summed energy volume (kWh) from NED payloads.
+
+    NED returns sub-hourly slices (e.g. 10-minute ``volume`` in kWh). Slices are
+    summed into hourly buckets so callers can derive an average MW load.
+    """
     items: list[Any]
     if isinstance(payload, dict):
         if "hydra:member" in payload:
@@ -144,11 +170,14 @@ def _parse_utilizations(payload: Any) -> dict[str, float]:
         if not isinstance(item, dict):
             continue
         ts = item.get("validfrom") or item.get("validFrom") or item.get("timestamp")
-        value = item.get("value") or item.get("volume") or item.get("amount")
+        value = item.get("volume")
+        if value is None:
+            value = item.get("value") or item.get("amount")
         if ts is None or value is None:
             continue
         try:
-            out[str(ts)] = float(value)
+            hour_key = _hour_bucket(str(ts))
+            out[hour_key] = out.get(hour_key, 0.0) + float(value)
         except (TypeError, ValueError):
             continue
     return out

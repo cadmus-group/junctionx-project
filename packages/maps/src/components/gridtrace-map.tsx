@@ -82,9 +82,10 @@ export function GridTraceMap({
   useEffect(() => {
     const map = mapRef.current;
     if (map && fitBounds) {
-      map.fitBounds(fitBounds, { padding: 64, maxZoom: 14, duration: 600 });
+      map.fitBounds(fitBounds, { padding: 40, maxZoom: 16, duration: 600 });
+      if (map.getZoom() < zoom) map.setZoom(zoom);
     }
-  }, [fitBounds]);
+  }, [fitBounds, zoom]);
 
   return (
     <div className={className ?? "relative h-full w-full"}>

@@ -66,6 +66,13 @@ def _load_moment_results(cfg) -> tuple[dict, str | None]:
     except Exception as exc:  # noqa: BLE001 — fallback preserves demo reliability
         log_event(logger, "moment_scoring_failed", error=str(exc))
         return {}, None
+    finally:
+        try:
+            from gridtrace_worker.ml.moment_pipeline import release_model_cache
+
+            release_model_cache()
+        except ImportError:
+            pass
 
 
 def _average_precision(labels: np.ndarray, scores: np.ndarray) -> float:

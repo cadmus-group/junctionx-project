@@ -10,7 +10,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { setToken } from "./client";
+import { DEMO_MSW_TOKEN, setToken, TOKEN_KEY } from "./client";
+import { getPublicEnv } from "./env";
 import { resolveRole, type Role } from "./roles";
 
 export interface AuthUser {
@@ -44,13 +45,35 @@ function readStoredUser(): AuthUser | null {
   }
 }
 
+function clearStoredSession(): void {
+  setToken(null);
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(USER_KEY);
+  }
+}
+
+/** Require both user and a token that works with the current runtime mode. */
+function readStoredSession(): AuthUser | null {
+  const user = readStoredUser();
+  const token =
+    typeof window === "undefined" ? null : window.localStorage.getItem(TOKEN_KEY);
+  if (!user || !token) return null;
+
+  const { NEXT_PUBLIC_DEMO_MODE } = getPublicEnv();
+  if (!NEXT_PUBLIC_DEMO_MODE && token === DEMO_MSW_TOKEN) return null;
+
+  return user;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
 
   // Hydrate from localStorage once on the client.
   useEffect(() => {
-    setUser(readStoredUser());
+    const session = readStoredSession();
+    if (!session) clearStoredSession();
+    setUser(session);
     setReady(true);
   }, []);
 
@@ -61,8 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    setToken(null);
-    window.localStorage.removeItem(USER_KEY);
+    clearStoredSession();
     setUser(null);
   }, []);
 

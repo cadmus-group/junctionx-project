@@ -16,11 +16,18 @@ import {
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { getPublicEnv } from "./env";
 
-const TOKEN_KEY = "gridtrace.token";
+export const TOKEN_KEY = "gridtrace.token";
+
+/** MSW demo login issues this literal; it is not a valid API JWT. */
+export const DEMO_MSW_TOKEN = "demo-token";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(TOKEN_KEY);
+}
+
+export function hasStoredToken(): boolean {
+  return getToken() !== null;
 }
 
 export function setToken(token: string | null): void {

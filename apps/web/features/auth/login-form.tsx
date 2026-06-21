@@ -18,6 +18,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/client";
+import { getPublicEnv } from "@/lib/env";
 import { ROLE_HOME, resolveRole } from "@/lib/roles";
 
 const loginSchema = z.object({
@@ -98,7 +99,9 @@ export function LoginForm() {
               {isSubmitting ? "Signing in…" : "Sign in"}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Demo: operator · analyst · inspector (password 8+ chars)
+              {getPublicEnv().NEXT_PUBLIC_DEMO_MODE
+                ? "Demo: operator · analyst · inspector (password 8+ chars)"
+                : "Demo user: demo_operator / SuperSecret123!"}
             </p>
           </form>
         </CardContent>
