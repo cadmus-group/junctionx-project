@@ -83,9 +83,15 @@ function Sidebar() {
 
   return (
     <aside className={cn("flex w-56 shrink-0 flex-col border-r", RAIL)}>
-      <div className="flex h-[52px] items-center gap-2.5 border-b border-[#2D2D2A] px-4">
-        <Image src="/logo_icon.png" alt="" width={24} height={24} className="h-6 w-6 shrink-0" />
-        <span className="text-sm font-semibold tracking-tight">Atlas</span>
+      <div className="flex h-[52px] items-center border-b border-[#2D2D2A] px-4">
+        <Link
+          href="/"
+          aria-label="Atlas — Command Center"
+          className="flex items-center gap-2.5 rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+        >
+          <Image src="/logo_icon.png" alt="" width={24} height={24} className="h-6 w-6 shrink-0" />
+          <span className="text-sm font-semibold tracking-tight">Atlas</span>
+        </Link>
       </div>
       <nav className="flex-1 space-y-0.5 p-2">
         {items.map((item) => {
