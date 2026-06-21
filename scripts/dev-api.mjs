@@ -3,11 +3,29 @@
  * Cross-platform replacement for dev-api.sh (works on Windows without bash/lsof).
  */
 import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+function resolveUv() {
+  const localBin = join(homedir(), ".local", "bin", process.platform === "win32" ? "uv.exe" : "uv");
+  const cargoBin = join(homedir(), ".cargo", "bin", process.platform === "win32" ? "uv.exe" : "uv");
+
+  for (const candidate of [localBin, cargoBin]) {
+    if (existsSync(candidate)) return candidate;
+  }
+
+  const which = spawnSync("which", ["uv"], { encoding: "utf8" });
+  if (which.status === 0 && which.stdout.trim()) return which.stdout.trim();
+
+  console.error(
+    "error: uv not found. Install it with:\n  curl -LsSf https://astral.sh/uv/install.sh | sh\nThen run: pnpm py:sync",
+  );
+  process.exit(1);
+}
 
 function readEnvValue(key, fallback) {
   for (const file of [join(ROOT, ".env"), join(ROOT, ".env.local")]) {
@@ -25,7 +43,7 @@ const port = readEnvValue("API_PORT", "8000");
 const bindHost = host === "0.0.0.0" ? "127.0.0.1" : host;
 
 const child = spawn(
-  "uv",
+  resolveUv(),
   [
     "run",
     "--python",
@@ -43,4 +61,8 @@ const child = spawn(
   { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" },
 );
 
+child.on("error", (err) => {
+  console.error(`error: failed to start API server: ${err.message}`);
+  process.exit(1);
+});
 child.on("exit", (code) => process.exit(code ?? 0));
