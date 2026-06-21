@@ -166,19 +166,21 @@ function TopRiskList({ customers }: { customers: Customer[] }) {
   return (
     <ul className="divide-y divide-border">
       {customers.map((c) => (
-        <li key={c.id} className="flex items-center justify-between gap-3 py-2.5">
-          <div className="min-w-0">
-            <Link
-              href={`/customers/${c.id}`}
-              className="text-sm font-medium text-foreground hover:text-primary"
-            >
-              {c.external_ref}
-            </Link>
-            <p className="truncate text-xs text-muted-foreground">
-              {c.customer_type} · {c.region_id ?? "—"}
-            </p>
-          </div>
-          {c.risk_tier ? <RiskBadge tier={c.risk_tier} score={c.risk_score ?? undefined} /> : null}
+        <li key={c.id}>
+          <Link
+            href={`/customers/${c.id}`}
+            className="-mx-2 flex items-center justify-between gap-3 rounded-sm px-2 py-2.5 transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">{c.external_ref}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {c.customer_type} · {c.region_id ?? "—"}
+              </p>
+            </div>
+            {c.risk_tier ? (
+              <RiskBadge tier={c.risk_tier} score={c.risk_score ?? undefined} />
+            ) : null}
+          </Link>
         </li>
       ))}
     </ul>

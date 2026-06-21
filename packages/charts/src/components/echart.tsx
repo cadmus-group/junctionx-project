@@ -9,21 +9,30 @@ export interface EChartProps {
   height?: number | string;
   className?: string;
   notMerge?: boolean;
+  /** Text alternative for assistive tech. The canvas is otherwise opaque to it. */
+  ariaLabel?: string;
 }
 
-export function EChart({ option, height = 280, className, notMerge = true }: EChartProps) {
+export function EChart({ option, height = 280, className, notMerge = true, ariaLabel }: EChartProps) {
   const style = useMemo(
     () => ({ height: typeof height === "number" ? `${height}px` : height, width: "100%" }),
     [height]
   );
+  // Enable ECharts' built-in ARIA so it auto-describes the series from the data,
+  // unless a chart opts out by setting its own `aria`.
+  const accessibleOption = useMemo<EChartsOption>(
+    () => ({ aria: { enabled: true }, ...option }),
+    [option]
+  );
   return (
-    <ReactECharts
-      option={option}
-      notMerge={notMerge}
-      lazyUpdate
-      style={style}
-      className={className}
-      opts={{ renderer: "canvas" }}
-    />
+    <div role="img" aria-label={ariaLabel} className={className}>
+      <ReactECharts
+        option={accessibleOption}
+        notMerge={notMerge}
+        lazyUpdate
+        style={style}
+        opts={{ renderer: "canvas" }}
+      />
+    </div>
   );
 }

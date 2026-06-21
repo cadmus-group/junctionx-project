@@ -77,19 +77,32 @@ export function ModelAnalytics() {
                   <Card>
                     <CardHeader>
                       <CardTitle>Precision–recall</CardTitle>
-                      <CardDescription>Active model: {active.model_version}</CardDescription>
+                      <CardDescription>
+                        Indicative shape from PR-AUC {active.metrics.pr_auc.toFixed(2)} ·{" "}
+                        {active.model_version}. Full curve pending model export.
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <PrecisionRecallChart points={precisionRecallFromModel(active)} height={260} />
+                      <PrecisionRecallChart
+                        points={precisionRecallFromModel(active)}
+                        height={260}
+                        ariaLabel={`Precision–recall curve for model ${active.model_version}, PR-AUC ${active.metrics.pr_auc.toFixed(2)}.`}
+                      />
                     </CardContent>
                   </Card>
                   <Card>
                     <CardHeader>
                       <CardTitle>Calibration</CardTitle>
-                      <CardDescription>Predicted vs observed risk frequency.</CardDescription>
+                      <CardDescription>
+                        Indicative reliability from the Brier score. Full curve pending model export.
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <CalibrationChart points={calibrationFromModel(active)} height={260} />
+                      <CalibrationChart
+                        points={calibrationFromModel(active)}
+                        height={260}
+                        ariaLabel={`Calibration reliability curve for model ${active.model_version}.`}
+                      />
                     </CardContent>
                   </Card>
                   <Card>
@@ -103,6 +116,7 @@ export function ModelAnalytics() {
                           <RiskDistributionChart
                             breakdown={summary.risk_tier_breakdown}
                             height={260}
+                            ariaLabel="Scored metering points by risk tier."
                           />
                         )}
                       </QueryBoundary>
