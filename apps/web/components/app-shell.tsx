@@ -10,10 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@gridtrace/ui";
 import {
-  Activity,
   Boxes,
   ClipboardList,
-  Database,
   Gauge,
   LayoutDashboard,
   LogOut,
@@ -50,8 +48,6 @@ const NAV: NavItem[] = [
   { href: "/assets", label: "Assets", icon: Boxes, roles: ["analyst"] },
   { href: "/customers", label: "Metering points", icon: Gauge, roles: ["analyst"] },
   { href: "/inspections", label: "Inspections", icon: ClipboardList, roles: ALL },
-  { href: "/analytics", label: "Model Analytics", icon: Activity, roles: ["analyst"] },
-  { href: "/data-quality", label: "Data Quality", icon: Database, roles: ["analyst"] },
   { href: "/settings", label: "Settings", icon: Settings, roles: ["operator"], hidden: true },
 ];
 

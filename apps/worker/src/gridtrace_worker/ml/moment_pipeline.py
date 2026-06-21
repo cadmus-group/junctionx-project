@@ -57,6 +57,23 @@ class MomentAnomalyResult:
     peak_errors: list[float]
 
 
+def moment_results_to_json(results: dict[str, MomentAnomalyResult]) -> dict[str, dict]:
+    return {
+        cid: {
+            "customer_id": r.customer_id,
+            "anomaly_score": r.anomaly_score,
+            "reconstruction_mse": r.reconstruction_mse,
+            "peak_timestamps": r.peak_timestamps,
+            "peak_errors": r.peak_errors,
+        }
+        for cid, r in results.items()
+    }
+
+
+def moment_results_from_json(data: dict[str, dict]) -> dict[str, MomentAnomalyResult]:
+    return {cid: MomentAnomalyResult(**payload) for cid, payload in data.items()}
+
+
 def _parse_database_url_for_duckdb(url: str) -> str:
     """Convert a SQLAlchemy/psycopg URL into DuckDB postgres ATTACH options."""
     parsed = urlparse(url)

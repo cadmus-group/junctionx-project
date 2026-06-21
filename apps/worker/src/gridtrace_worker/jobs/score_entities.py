@@ -49,13 +49,47 @@ HEURISTIC_ALGORITHM = "deterministic-logistic-heuristic+zscore-anomaly"
 
 
 def _load_moment_results(cfg) -> tuple[dict, str | None]:
-    """Run MOMENT inference when enabled; return empty dict on failure."""
+    """Run MOMENT inference when enabled; return empty dict on failure.
+
+    MOMENT uses torch in a child process so the main worker can run LightGBM/SHAP
+    without the two runtimes interfering after inference.
+    """
     if not cfg.moment_active:
         return {}, None
     try:
-        from gridtrace_worker.ml.moment_pipeline import MOMENTInferencePipeline
+        import json
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path
 
-        results = MOMENTInferencePipeline(cfg).infer(cfg.database_url)
+        from gridtrace_worker.ml.moment_pipeline import moment_results_from_json
+
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+            output_path = Path(tmp.name)
+
+        try:
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "gridtrace_worker.main",
+                    "score-moment",
+                    "--output",
+                    str(output_path),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if proc.returncode != 0:
+                raise RuntimeError(proc.stderr.strip() or proc.stdout.strip() or "score-moment failed")
+
+            payload = json.loads(output_path.read_text())
+            results = moment_results_from_json(payload)
+        finally:
+            output_path.unlink(missing_ok=True)
+
         log_event(
             logger,
             "moment_scoring_applied",
@@ -66,13 +100,6 @@ def _load_moment_results(cfg) -> tuple[dict, str | None]:
     except Exception as exc:  # noqa: BLE001 — fallback preserves demo reliability
         log_event(logger, "moment_scoring_failed", error=str(exc))
         return {}, None
-    finally:
-        try:
-            from gridtrace_worker.ml.moment_pipeline import release_model_cache
-
-            release_model_cache()
-        except ImportError:
-            pass
 
 
 def _average_precision(labels: np.ndarray, scores: np.ndarray) -> float:

@@ -244,10 +244,18 @@ def cmd_score_moment(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 1
-    from gridtrace_worker.ml.moment_pipeline import MOMENTInferencePipeline
+    from gridtrace_worker.ml.moment_pipeline import MOMENTInferencePipeline, moment_results_to_json
 
     pipeline = MOMENTInferencePipeline(cfg)
     results = pipeline.infer(cfg.database_url)
+    if getattr(args, "output", None):
+        import json
+        from pathlib import Path
+
+        Path(args.output).write_text(json.dumps(moment_results_to_json(results)))
+        log_event(logger, "command_complete", command="score-moment", scored=len(results))
+        print(json.dumps({"scored_customers": len(results), "output": args.output}, indent=2))
+        return 0
     summary = {
         "scored_customers": len(results),
         "model": cfg.moment_model_name,
@@ -331,6 +339,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--keep-existing",
         action="store_true",
         help="Merge CSV data without truncating existing operational rows (ingest-production)",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Write full MOMENT per-customer JSON results to this path (score-moment)",
     )
     return parser
 
